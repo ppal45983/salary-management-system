@@ -108,6 +108,7 @@ export interface TaxCalculationRequest {
   country: string;
   taxYear?: number;
   currency?: string;
+  regime?: 'NEW' | 'OLD';
 }
 
 export interface TaxBracketBreakdown {
@@ -116,6 +117,14 @@ export interface TaxBracketBreakdown {
   rate: number;
   taxableAmountInBracket: number;
   taxForBracket: number;
+}
+
+export interface RegimeComparison {
+  newRegimeTax: number;
+  oldRegimeTax: number;
+  difference: number;
+  recommendation: 'NEW' | 'OLD';
+  savingsMessage: string;
 }
 
 export interface TaxCalculationResponse {
@@ -129,6 +138,8 @@ export interface TaxCalculationResponse {
   country: string;
   taxYear: number;
   currency: string;
+  regime?: 'NEW' | 'OLD';
+  comparison?: RegimeComparison;
   breakdown: TaxBracketBreakdown[];
 }
 

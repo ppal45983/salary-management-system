@@ -31,4 +31,5 @@ public class TaxCalculationRequestDto {
 
     private Integer taxYear;
     private String currency;
+    private String regime; // "NEW" or "OLD" for India
 }

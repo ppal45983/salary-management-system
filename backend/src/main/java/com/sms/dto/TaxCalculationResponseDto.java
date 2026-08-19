@@ -27,6 +27,7 @@ public class TaxCalculationResponseDto {
     private String country;
     private Integer taxYear;
     private String currency;
+    private String regime;
     private List<TaxBracketBreakdownDto> breakdown;
 
     @Data

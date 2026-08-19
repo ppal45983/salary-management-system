@@ -33,6 +33,7 @@ interface BenchmarkPreset {
             <span class="badge badge-info">{{ currentCurrency }} Tax System</span>
           </div>
 
+          <!-- Country Selector -->
           <div class="form-group">
             <label>Select Jurisdiction / Country</label>
             <select class="form-control" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
@@ -42,7 +43,40 @@ interface BenchmarkPreset {
             </select>
           </div>
 
-          <div class="form-group">
+          <!-- India Tax Regime Selection Toggle (New vs Old) -->
+          <div class="regime-toggle-box" *ngIf="selectedCountry === 'India'">
+            <label class="regime-label">India Tax Regime Selection:</label>
+            <div class="regime-buttons">
+              <button
+                type="button"
+                class="regime-btn"
+                [class.active]="selectedRegime === 'NEW'"
+                (click)="setRegime('NEW')"
+              >
+                <i class="fa-solid fa-bolt"></i>
+                <div class="regime-text">
+                  <strong>New Tax Regime</strong>
+                  <span class="regime-sub">Default (Slabs 5% to 30% u/s 115BAC)</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                class="regime-btn"
+                [class.active]="selectedRegime === 'OLD'"
+                (click)="setRegime('OLD')"
+              >
+                <i class="fa-solid fa-file-invoice"></i>
+                <div class="regime-text">
+                  <strong>Old Tax Regime</strong>
+                  <span class="regime-sub">Traditional (With 80C/80D/HRA deductions)</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Salary Slider & Numeric Input -->
+          <div class="form-group mt-16">
             <div class="label-row">
               <label>Annual Base Gross Salary ({{ currentCurrency }})</label>
               <span class="val-display font-bold">{{ currentSymbol }}{{ baseSalary | number }}</span>
@@ -64,18 +98,22 @@ interface BenchmarkPreset {
             />
           </div>
 
+          <!-- Allowances & Deductions -->
           <div class="form-row">
             <div class="form-group flex-1">
               <label>Allowances ({{ currentSymbol }})</label>
               <input type="number" class="form-control" [(ngModel)]="allowances" (input)="calculate()" min="0" />
             </div>
             <div class="form-group flex-1">
-              <label>Pre-Tax Deductions ({{ currentSymbol }})</label>
+              <label>
+                Pre-Tax Deductions ({{ currentSymbol }})
+                <span *ngIf="selectedCountry === 'India' && selectedRegime === 'OLD'" class="text-xs text-primary font-bold">(80C, 80D, HRA)</span>
+              </label>
               <input type="number" class="form-control" [(ngModel)]="deductions" (input)="calculate()" min="0" />
             </div>
           </div>
 
-          <!-- Dynamic Preset Salary Buttons for Active Jurisdiction -->
+          <!-- Dynamic Presets -->
           <div class="preset-group mt-16">
             <span class="preset-label">Standard Industry Benchmarks ({{ currentCountryName }}):</span>
             <div class="preset-buttons">
@@ -96,7 +134,9 @@ interface BenchmarkPreset {
           <div class="card-header">
             <div>
               <div class="card-title">
-                <i class="fa-solid fa-chart-pie text-success"></i> {{ selectedCountry }} Tax Breakdown
+                <i class="fa-solid fa-chart-pie text-success"></i>
+                {{ selectedCountry }} Tax Breakdown
+                <span *ngIf="selectedCountry === 'India'" class="regime-tag">({{ selectedRegime === 'NEW' ? 'New Regime' : 'Old Regime' }})</span>
               </div>
               <div class="card-subtitle">Calculated using official statutory progressive tax brackets</div>
             </div>
@@ -128,9 +168,39 @@ interface BenchmarkPreset {
             </div>
           </div>
 
+          <!-- India New vs Old Tax Regime Comparison Widget -->
+          <div class="comparison-banner mt-16" *ngIf="result.comparison && selectedCountry === 'India'">
+            <div class="comp-header">
+              <div class="comp-title">
+                <i class="fa-solid fa-scale-balanced text-primary"></i> Regime Comparison & Tax Optimizer
+              </div>
+              <span class="badge" [ngClass]="result.comparison.recommendation === selectedRegime ? 'badge-success' : 'badge-warning'">
+                Recommended: {{ result.comparison.recommendation === 'NEW' ? 'New Regime' : 'Old Regime' }}
+              </span>
+            </div>
+            <div class="comp-grid">
+              <div class="comp-col" [class.active-regime]="selectedRegime === 'NEW'">
+                <div class="c-title">New Tax Regime</div>
+                <div class="c-amount">₹{{ result.comparison.newRegimeTax | number }}</div>
+                <div class="c-sub" *ngIf="selectedRegime === 'NEW'">✓ Currently Selected</div>
+              </div>
+              <div class="comp-col" [class.active-regime]="selectedRegime === 'OLD'">
+                <div class="c-title">Old Tax Regime</div>
+                <div class="c-amount">₹{{ result.comparison.oldRegimeTax | number }}</div>
+                <div class="c-sub" *ngIf="selectedRegime === 'OLD'">✓ Currently Selected</div>
+              </div>
+            </div>
+            <div class="savings-msg">
+              <i class="fa-solid fa-circle-check text-success"></i>
+              <span>{{ result.comparison.savingsMessage }}</span>
+            </div>
+          </div>
+
           <!-- Progressive Tax Slabs Breakdown Table -->
           <div class="slabs-container mt-20" *ngIf="result.breakdown && result.breakdown.length > 0">
-            <div class="slab-title">PROGRESSIVE SLAB-BY-SLAB COMPUTATION ({{ currentCurrency }})</div>
+            <div class="slab-title">
+              PROGRESSIVE SLAB-BY-SLAB COMPUTATION ({{ currentCurrency }} • {{ selectedCountry === 'India' ? (selectedRegime + ' REGIME') : 'STANDARD' }})
+            </div>
             <table class="data-table">
               <thead>
                 <tr>
@@ -173,10 +243,69 @@ interface BenchmarkPreset {
     .mt-8 { margin-top: 8px; }
     .mt-16 { margin-top: 16px; }
     .mt-20 { margin-top: 20px; }
+
+    .regime-toggle-box {
+      margin-top: 14px;
+      padding: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+
+      .regime-label {
+        font-size: 0.725rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 8px;
+        display: block;
+      }
+
+      .regime-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .regime-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: #ffffff;
+        border: 1.5px solid #cbd5e1;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.2s;
+
+        i { font-size: 1.1rem; color: #64748b; }
+
+        .regime-text {
+          display: flex;
+          flex-direction: column;
+          strong { font-size: 0.8rem; color: #0f172a; }
+          .regime-sub { font-size: 0.675rem; color: #64748b; }
+        }
+
+        &:hover {
+          border-color: #94a3b8;
+          background: #f8fafc;
+        }
+
+        &.active {
+          border-color: #4f46e5;
+          background: #eef2ff;
+          i { color: #4f46e5; }
+          strong { color: #4f46e5; }
+        }
+      }
+    }
+
     .preset-group {
       .preset-label { font-size: 0.75rem; color: #64748b; font-weight: 600; margin-bottom: 6px; display: block; }
       .preset-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
     }
+
     .net-highlight {
       background: #eef2ff;
       border-radius: 14px;
@@ -186,6 +315,7 @@ interface BenchmarkPreset {
       .net-val { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: #1e1b4b; margin: 4px 0; }
       .monthly-sub { font-size: 0.85rem; color: #64748b; }
     }
+
     .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
     .metric-pill {
       background: #f8fafc;
@@ -196,6 +326,61 @@ interface BenchmarkPreset {
       .m-lbl { font-size: 0.7rem; color: #64748b; display: block; margin-bottom: 2px; }
       .m-val { font-size: 1rem; }
     }
+
+    .comparison-banner {
+      background: #f8fafc;
+      border: 1px solid #c7d2fe;
+      border-radius: 12px;
+      padding: 14px;
+
+      .comp-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        .comp-title { font-size: 0.8rem; font-weight: 800; color: #0f172a; }
+      }
+
+      .comp-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .comp-col {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 8px 12px;
+        text-align: center;
+
+        .c-title { font-size: 0.7rem; font-weight: 700; color: #64748b; }
+        .c-amount { font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 2px 0; }
+        .c-sub { font-size: 0.65rem; color: #4f46e5; font-weight: 700; }
+
+        &.active-regime {
+          border-color: #6366f1;
+          background: #eef2ff;
+          .c-title { color: #4f46e5; }
+        }
+      }
+
+      .savings-msg {
+        margin-top: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #166534;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #f0fdf4;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #bbf7d0;
+      }
+    }
+
+    .regime-tag { font-size: 0.75rem; color: #4f46e5; font-weight: 700; }
     .slabs-container {
       .slab-title { font-size: 0.75rem; font-weight: 800; color: #64748b; margin-bottom: 8px; letter-spacing: 0.05em; }
     }
@@ -208,16 +393,17 @@ interface BenchmarkPreset {
 export class TaxCalculatorComponent implements OnInit, OnDestroy {
   countries: CountryInfo[] = [];
   selectedCountry = 'India';
+  selectedRegime: 'NEW' | 'OLD' = 'NEW';
   currentCountryName = 'India';
   currentCurrency = 'INR';
   currentSymbol = '₹';
 
   baseSalary = 1500000;
   allowances = 150000;
-  deductions = 50000;
+  deductions = 150000; // Standard + 80C deductions for realistic simulation
 
   sliderMin = 300000;
-  sliderMax = 6000000;
+  sliderMax = 7500000;
   sliderStep = 50000;
 
   currentPresets: BenchmarkPreset[] = [];
@@ -257,6 +443,11 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
     this.currencySub?.unsubscribe();
   }
 
+  setRegime(regime: 'NEW' | 'OLD') {
+    this.selectedRegime = regime;
+    this.calculate();
+  }
+
   onCountryChange() {
     const c = this.countries.find(item => item.name === this.selectedCountry);
     this.currentCountryName = this.selectedCountry;
@@ -269,7 +460,7 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
       this.sliderStep = 50000;
       this.baseSalary = 1500000;
       this.allowances = 150000;
-      this.deductions = 50000;
+      this.deductions = 150000;
       this.currentPresets = [
         { label: '₹6L (Junior)', amount: 600000 },
         { label: '₹15L (Senior)', amount: 1500000 },
@@ -345,7 +536,7 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
   setPreset(amt: number) {
     this.baseSalary = amt;
     this.allowances = Math.round(amt * 0.1);
-    this.deductions = Math.round(amt * 0.03);
+    this.deductions = this.selectedCountry === 'India' && this.selectedRegime === 'OLD' ? 150000 : Math.round(amt * 0.03);
     this.calculate();
   }
 
@@ -355,7 +546,8 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
       allowances: this.allowances,
       deductions: this.deductions,
       country: this.selectedCountry,
-      currency: this.currentCurrency
+      currency: this.currentCurrency,
+      regime: this.selectedCountry === 'India' ? this.selectedRegime : undefined
     }).subscribe(res => {
       this.result = res;
     });
