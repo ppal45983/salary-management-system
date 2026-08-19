@@ -56,7 +56,7 @@ interface BenchmarkPreset {
                 <i class="fa-solid fa-bolt"></i>
                 <div class="regime-text">
                   <strong>New Tax Regime</strong>
-                  <span class="regime-sub">Default (Slabs 5% to 30% u/s 115BAC)</span>
+                  <span class="regime-sub">Tax-Free up to ₹12.75L (₹75k Std Ded + 87A Rebate) • Slabs 5% to 30%</span>
                 </div>
               </button>
 
@@ -106,10 +106,24 @@ interface BenchmarkPreset {
             </div>
             <div class="form-group flex-1">
               <label>
-                Pre-Tax Deductions ({{ currentSymbol }})
-                <span *ngIf="selectedCountry === 'India' && selectedRegime === 'OLD'" class="text-xs text-primary font-bold">(80C, 80D, HRA)</span>
+                <span *ngIf="selectedCountry === 'India' && selectedRegime === 'OLD'">Itemized Deductions (80C, 80D, HRA)</span>
+                <span *ngIf="selectedCountry === 'India' && selectedRegime === 'NEW'">Pre-Tax Deductions</span>
+                <span *ngIf="selectedCountry !== 'India'">Pre-Tax Deductions ({{ currentSymbol }})</span>
               </label>
-              <input type="number" class="form-control" [(ngModel)]="deductions" (input)="calculate()" min="0" />
+              <input
+                type="number"
+                class="form-control"
+                [(ngModel)]="deductions"
+                (input)="calculate()"
+                min="0"
+                [placeholder]="selectedCountry === 'India' && selectedRegime === 'OLD' ? 'e.g. 150000 (80C)' : '0'"
+              />
+              <small *ngIf="selectedCountry === 'India' && selectedRegime === 'OLD'" class="text-xs text-muted" style="display: block; margin-top: 4px;">
+                * ₹50,000 Standard Deduction is added automatically
+              </small>
+              <small *ngIf="selectedCountry === 'India' && selectedRegime === 'NEW'" class="text-xs text-muted" style="display: block; margin-top: 4px;">
+                * ₹75,000 Standard Deduction is applied automatically
+              </small>
             </div>
           </div>
 
@@ -462,9 +476,10 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
       this.allowances = 150000;
       this.deductions = 150000;
       this.currentPresets = [
-        { label: '₹6L (Junior)', amount: 600000 },
-        { label: '₹15L (Senior)', amount: 1500000 },
-        { label: '₹28L (Staff/Lead)', amount: 2800000 },
+        { label: '₹8L (Mid)', amount: 800000 },
+        { label: '₹12.75L (Tax-Free Cap)', amount: 1275000 },
+        { label: '₹16L (Senior)', amount: 1600000 },
+        { label: '₹24L (Staff/Lead)', amount: 2400000 },
         { label: '₹50L (Exec)', amount: 5000000 }
       ];
     } else if (this.selectedCountry === 'Japan') {

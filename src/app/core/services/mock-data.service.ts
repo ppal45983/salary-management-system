@@ -68,19 +68,20 @@ export class MockDataService {
     { id: 10, country: 'United Kingdom', taxYear: 2024, incomeFrom: 50270, incomeTo: 125140, taxRate: 40.0, currency: 'GBP', description: 'Higher Rate (40%)' },
     { id: 11, country: 'United Kingdom', taxYear: 2024, incomeFrom: 125140, incomeTo: 999999999, taxRate: 45.0, currency: 'GBP', description: 'Additional Rate (45%)' },
 
-    // India (INR) - New Tax Regime (Section 115BAC)
-    { id: 12, country: 'India', taxYear: 2024, incomeFrom: 0, incomeTo: 300000, taxRate: 0.0, currency: 'INR', description: 'Nil Slab (0%)' },
-    { id: 13, country: 'India', taxYear: 2024, incomeFrom: 300000, incomeTo: 600000, taxRate: 5.0, currency: 'INR', description: 'Slab 1 (5%)' },
-    { id: 14, country: 'India', taxYear: 2024, incomeFrom: 600000, incomeTo: 900000, taxRate: 10.0, currency: 'INR', description: 'Slab 2 (10%)' },
-    { id: 15, country: 'India', taxYear: 2024, incomeFrom: 900000, incomeTo: 1200000, taxRate: 15.0, currency: 'INR', description: 'Slab 3 (15%)' },
-    { id: 16, country: 'India', taxYear: 2024, incomeFrom: 1200000, incomeTo: 1500000, taxRate: 20.0, currency: 'INR', description: 'Slab 4 (20%)' },
-    { id: 17, country: 'India', taxYear: 2024, incomeFrom: 1500000, incomeTo: 999999999, taxRate: 30.0, currency: 'INR', description: 'Slab 5 (30%)' },
+    // India (INR) - New Tax Regime (Updated Budget Slabs u/s 115BAC)
+    { id: 12, country: 'India', taxYear: 2024, incomeFrom: 0, incomeTo: 400000, taxRate: 0.0, currency: 'INR', description: 'Nil Slab (0% up to ₹4L)' },
+    { id: 13, country: 'India', taxYear: 2024, incomeFrom: 400000, incomeTo: 800000, taxRate: 5.0, currency: 'INR', description: 'Slab 1 (5% for ₹4L - ₹8L)' },
+    { id: 14, country: 'India', taxYear: 2024, incomeFrom: 800000, incomeTo: 1200000, taxRate: 10.0, currency: 'INR', description: 'Slab 2 (10% for ₹8L - ₹12L)' },
+    { id: 15, country: 'India', taxYear: 2024, incomeFrom: 1200000, incomeTo: 1600000, taxRate: 15.0, currency: 'INR', description: 'Slab 3 (15% for ₹12L - ₹16L)' },
+    { id: 16, country: 'India', taxYear: 2024, incomeFrom: 1600000, incomeTo: 2000000, taxRate: 20.0, currency: 'INR', description: 'Slab 4 (20% for ₹16L - ₹20L)' },
+    { id: 17, country: 'India', taxYear: 2024, incomeFrom: 2000000, incomeTo: 2400000, taxRate: 25.0, currency: 'INR', description: 'Slab 5 (25% for ₹20L - ₹24L)' },
+    { id: 18, country: 'India', taxYear: 2024, incomeFrom: 2400000, incomeTo: 999999999, taxRate: 30.0, currency: 'INR', description: 'Slab 6 (30% above ₹24L)' },
 
     // India (INR) - Old Tax Regime (With Deductions)
-    { id: 101, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 0, incomeTo: 250000, taxRate: 0.0, currency: 'INR', description: 'Basic Exemption (0%)' },
-    { id: 102, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 250000, incomeTo: 500000, taxRate: 5.0, currency: 'INR', description: 'Slab 1 (5%)' },
-    { id: 103, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 500000, incomeTo: 1000000, taxRate: 20.0, currency: 'INR', description: 'Slab 2 (20%)' },
-    { id: 104, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 1000000, incomeTo: 999999999, taxRate: 30.0, currency: 'INR', description: 'Slab 3 (30%)' },
+    { id: 101, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 0, incomeTo: 250000, taxRate: 0.0, currency: 'INR', description: 'Basic Exemption (0% up to ₹2.5L)' },
+    { id: 102, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 250000, incomeTo: 500000, taxRate: 5.0, currency: 'INR', description: 'Slab 1 (5% for ₹2.5L - ₹5L)' },
+    { id: 103, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 500000, incomeTo: 1000000, taxRate: 20.0, currency: 'INR', description: 'Slab 2 (20% for ₹5L - ₹10L)' },
+    { id: 104, country: 'India (Old Regime)', taxYear: 2024, incomeFrom: 1000000, incomeTo: 999999999, taxRate: 30.0, currency: 'INR', description: 'Slab 3 (30% above ₹10L)' },
 
     // Germany (EUR)
     { id: 18, country: 'Germany', taxYear: 2024, incomeFrom: 0, incomeTo: 11604, taxRate: 0.0, currency: 'EUR', description: 'Basic Tax-Free Allowance (0%)' },
@@ -316,12 +317,26 @@ export class MockDataService {
       brackets = this.taxBrackets.filter(b => b.country === 'United States');
     }
 
+    // For India New Regime: statutory Standard Deduction of ₹75,000 (no 80C/80D exemptions)
+    // For India Old Regime: statutory Standard Deduction of ₹50,000 + itemized deductions (80C, 80D, HRA)
+    let taxableGross = gross;
+    let standardDeductionApplied = ded;
+    if (isIndia) {
+      if (regime === 'NEW') {
+        standardDeductionApplied = 75000;
+        taxableGross = Math.max(0, gross - 75000);
+      } else {
+        standardDeductionApplied = 50000 + (ded || 0);
+        taxableGross = Math.max(0, gross - standardDeductionApplied);
+      }
+    }
+
     const breakdown: any[] = [];
     let totalTax = 0;
 
     for (const b of brackets) {
-      if (gross > b.incomeFrom) {
-        const taxable = b.incomeTo && gross > b.incomeTo ? (b.incomeTo - b.incomeFrom) : (gross - b.incomeFrom);
+      if (taxableGross > b.incomeFrom) {
+        const taxable = b.incomeTo && taxableGross > b.incomeTo ? (b.incomeTo - b.incomeFrom) : (taxableGross - b.incomeFrom);
         const bTax = Math.round((taxable * b.taxRate) / 100);
         totalTax += bTax;
         breakdown.push({
@@ -334,13 +349,13 @@ export class MockDataService {
       }
     }
 
-    // Section 87A rebate for India:
-    // New regime: 100% tax rebate if gross <= 7,00,000
-    // Old regime: 100% tax rebate if gross <= 5,00,000
+    // Section 87A Rebate for India:
+    // New regime: 100% tax rebate if net taxable income <= ₹12,00,000 (Gross up to ₹12,75,000 is 100% tax-free)
+    // Old regime: 100% tax rebate if net taxable income <= ₹5,00,000 (Gross up to ₹5,50,000 + deductions is 100% tax-free)
     if (isIndia) {
-      if (regime === 'NEW' && gross <= 700000) {
+      if (regime === 'NEW' && taxableGross <= 1200000) {
         totalTax = 0;
-      } else if (regime === 'OLD' && (gross - ded) <= 500000) {
+      } else if (regime === 'OLD' && taxableGross <= 500000) {
         totalTax = 0;
       }
     }
@@ -348,20 +363,21 @@ export class MockDataService {
     // Compute comparison between New & Old regime if country is India
     let comparison: any = undefined;
     if (isIndia) {
-      // Calculate New Regime Tax
+      // 1. New Regime Calculation (with ₹75,000 standard deduction & 12L rebate)
+      const taxableNew = Math.max(0, gross - 75000);
       let newTax = 0;
       const newBrackets = this.taxBrackets.filter(b => b.country === 'India');
       for (const b of newBrackets) {
-        if (gross > b.incomeFrom) {
-          const taxable = b.incomeTo && gross > b.incomeTo ? (b.incomeTo - b.incomeFrom) : (gross - b.incomeFrom);
+        if (taxableNew > b.incomeFrom) {
+          const taxable = b.incomeTo && taxableNew > b.incomeTo ? (b.incomeTo - b.incomeFrom) : (taxableNew - b.incomeFrom);
           newTax += Math.round((taxable * b.taxRate) / 100);
         }
       }
-      if (gross <= 700000) newTax = 0;
+      if (taxableNew <= 1200000) newTax = 0;
 
-      // Calculate Old Regime Tax (considering pre-tax deductions)
+      // 2. Old Regime Calculation (with ₹50,000 standard deduction + 80C/80D deductions & 5L rebate)
+      const taxableOld = Math.max(0, gross - 50000 - (ded || 0));
       let oldTax = 0;
-      const taxableOld = Math.max(0, gross - ded);
       const oldBrackets = this.taxBrackets.filter(b => b.country === 'India (Old Regime)');
       for (const b of oldBrackets) {
         if (taxableOld > b.incomeFrom) {
@@ -381,10 +397,10 @@ export class MockDataService {
         difference: diff,
         recommendation: recommended,
         savingsMessage: newTax < oldTax
-          ? `New Tax Regime saves ₹${savings.toLocaleString()} annually!`
+          ? `New Tax Regime saves ₹${savings.toLocaleString()} annually (Total tax-free earnings up to ₹12.75L)!`
           : oldTax < newTax
-          ? `Old Tax Regime saves ₹${savings.toLocaleString()} with current deductions!`
-          : 'Both tax regimes result in identical tax liability.'
+          ? `Old Tax Regime saves ₹${savings.toLocaleString()} with current deductions (₹50k Std + ₹${(ded || 0).toLocaleString()} 80C/80D)!`
+          : 'Both tax regimes result in identical ₹0 tax liability due to Section 87A rebate.'
       };
     }
 

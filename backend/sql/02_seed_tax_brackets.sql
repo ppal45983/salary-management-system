@@ -24,13 +24,25 @@ INSERT INTO tax_brackets (country, tax_year, income_from, income_to, tax_rate) V
 ('GB', 2024, 125140, 999999999, 0.45);
 
 -- ============================================
--- INDIA TAX BRACKETS 2024-25
+-- INDIA TAX BRACKETS 2024-25 (New Regime - Sec 115BAC)
 -- ============================================
 INSERT INTO tax_brackets (country, tax_year, income_from, income_to, tax_rate) VALUES
-('IN', 2024, 0, 300000, 0.00),
-('IN', 2024, 300000, 750000, 0.05),
-('IN', 2024, 750000, 1500000, 0.20),
-('IN', 2024, 1500000, 999999999, 0.30);
+('India', 2024, 0, 400000, 0.00),
+('India', 2024, 400000, 800000, 0.05),
+('India', 2024, 800000, 1200000, 0.10),
+('India', 2024, 1200000, 1600000, 0.15),
+('India', 2024, 1600000, 2000000, 0.20),
+('India', 2024, 2000000, 2400000, 0.25),
+('India', 2024, 2400000, 999999999, 0.30);
+
+-- ============================================
+-- INDIA TAX BRACKETS 2024-25 (Old Regime - Traditional)
+-- ============================================
+INSERT INTO tax_brackets (country, tax_year, income_from, income_to, tax_rate) VALUES
+('India (Old Regime)', 2024, 0, 250000, 0.00),
+('India (Old Regime)', 2024, 250000, 500000, 0.05),
+('India (Old Regime)', 2024, 500000, 1000000, 0.20),
+('India (Old Regime)', 2024, 1000000, 999999999, 0.30);
 
 -- ============================================
 -- CANADA TAX BRACKETS 2024
