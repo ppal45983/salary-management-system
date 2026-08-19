@@ -8,12 +8,13 @@ import {
   TaxCalculationResponse
 } from '../models/models';
 import { MockDataService } from './mock-data.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SalaryService {
-  private apiUrl = 'http://localhost:8080/api/v1/salaries';
+  private apiUrl = `${environment.apiUrl}/salaries`;
 
   constructor(
     private http: HttpClient,

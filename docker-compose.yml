@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # MySQL 8.0 Relational Database
+  # MySQL 8.0 Database Container
   db:
     image: mysql:8.0
     container_name: sms-mysql
@@ -20,25 +20,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - sms-network
 
-  # Spring Boot Backend API
+  # Spring Boot 3 Backend API Container
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: sms-backend
     restart: always
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/salary_management_db?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/salary_management_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      - sms-network
 
-  # Angular 16 Frontend (Production Nginx)
+  # Angular 16 Frontend & Nginx Reverse Proxy Container
   frontend:
     build:
       context: .
@@ -49,6 +54,12 @@ services:
       - "80:80"
     depends_on:
       - backend
+    networks:
+      - sms-network
 
 volumes:
   mysql_data:
+
+networks:
+  sms-network:
+    driver: bridge

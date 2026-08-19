@@ -4,12 +4,13 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiResponse, Employee, PageResponse } from '../models/models';
 import { MockDataService } from './mock-data.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class EmployeeService {
-  private apiUrl = 'http://localhost:8080/api/v1/employees';
+  private apiUrl = `${environment.apiUrl}/employees`;
 
   constructor(
     private http: HttpClient,
