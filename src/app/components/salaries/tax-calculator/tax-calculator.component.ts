@@ -1,7 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MasterDataService } from '../../../core/services/master-data.service';
 import { SalaryService } from '../../../core/services/salary.service';
+import { CurrencyConfig, CurrencyService } from '../../../core/services/currency.service';
 import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-tax-calculator',
@@ -35,14 +37,14 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
           <div class="form-group">
             <div class="label-row">
               <label>Annual Base Salary ({{ currentCurrency }})</label>
-              <span class="val-display font-bold">\${{ baseSalary | number }}</span>
+              <span class="val-display font-bold">{{ currentSymbol }}{{ baseSalary | number }}</span>
             </div>
             <input
               type="range"
               class="range-slider"
-              min="20000"
-              max="350000"
-              step="5000"
+              [min]="sliderMin"
+              [max]="sliderMax"
+              [step]="sliderStep"
               [(ngModel)]="baseSalary"
               (input)="calculate()"
             />
@@ -56,23 +58,29 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
 
           <div class="form-row">
             <div class="form-group flex-1">
-              <label>Allowances</label>
+              <label>Allowances ({{ currentSymbol }})</label>
               <input type="number" class="form-control" [(ngModel)]="allowances" (input)="calculate()" min="0" />
             </div>
             <div class="form-group flex-1">
-              <label>Pre-Tax Deductions</label>
+              <label>Pre-Tax Deductions ({{ currentSymbol }})</label>
               <input type="number" class="form-control" [(ngModel)]="deductions" (input)="calculate()" min="0" />
             </div>
           </div>
 
           <!-- Preset Salary Buttons -->
           <div class="preset-group mt-16">
-            <span class="preset-label">Quick Benchmarks:</span>
-            <div class="preset-buttons">
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(60000)">\$60k (Junior)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(120000)">\$120k (Senior)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(180000)">\$180k (Staff/Lead)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(250000)">\$250k (Exec)</button>
+            <span class="preset-label">Quick Benchmarks ({{ currentCurrency }}):</span>
+            <div class="preset-buttons" *ngIf="currentCurrency === 'INR'">
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(600000)">₹6L (Junior)</button>
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(1500000)">₹15L (Senior)</button>
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(2800000)">₹28L (Staff/Lead)</button>
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(5000000)">₹50L (Exec)</button>
+            </div>
+            <div class="preset-buttons" *ngIf="currentCurrency !== 'INR'">
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(60000)">{{ currentSymbol }}60k (Junior)</button>
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(120000)">{{ currentSymbol }}120k (Senior)</button>
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(180000)">{{ currentSymbol }}180k (Staff/Lead)</button>
+              <button class="btn btn-secondary btn-sm" (click)="setPreset(250000)">{{ currentSymbol }}250k (Exec)</button>
             </div>
           </div>
         </div>
@@ -89,9 +97,9 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
           <!-- Net Take Home Highlight -->
           <div class="net-highlight">
             <div class="net-sub">ESTIMATED ANNUAL NET PAY</div>
-            <div class="net-val">{{ currentCurrency }} \${{ result.netSalary | number }}</div>
+            <div class="net-val">{{ currentSymbol }}{{ result.netSalary | number }} {{ currentCurrency }}</div>
             <div class="monthly-sub">
-              Monthly Take-Home: <strong>\${{ (result.netSalary / 12) | number:'1.0-0' }} {{ currentCurrency }}</strong>
+              Monthly Take-Home: <strong>{{ currentSymbol }}{{ (result.netSalary / 12) | number:'1.0-0' }} {{ currentCurrency }}</strong>
             </div>
           </div>
 
@@ -99,11 +107,11 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
           <div class="metric-row mt-16">
             <div class="metric-pill">
               <span class="m-lbl">Gross Salary</span>
-              <span class="m-val font-bold">\${{ result.grossSalary | number }}</span>
+              <span class="m-val font-bold">{{ currentSymbol }}{{ result.grossSalary | number }}</span>
             </div>
             <div class="metric-pill">
               <span class="m-lbl">Income Tax</span>
-              <span class="m-val text-danger font-bold">\${{ result.totalTax | number }}</span>
+              <span class="m-val text-danger font-bold">{{ currentSymbol }}{{ result.totalTax | number }}</span>
             </div>
             <div class="metric-pill">
               <span class="m-lbl">Effective Rate</span>
@@ -113,22 +121,22 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
 
           <!-- Progressive Tax Slabs Breakdown Table -->
           <div class="slabs-container mt-20" *ngIf="result.breakdown && result.breakdown.length > 0">
-            <div class="slab-title">PROGRESSIVE SLAB COMPUTATION</div>
+            <div class="slab-title">PROGRESSIVE SLAB COMPUTATION ({{ currentCurrency }})</div>
             <table class="data-table">
               <thead>
                 <tr>
                   <th>Bracket Range</th>
                   <th>Rate</th>
-                  <th>Taxable</th>
+                  <th>Taxable in Slab</th>
                   <th class="text-right">Tax Amount</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let b of result.breakdown">
-                  <td>\${{ b.bracketFrom | number }} - {{ b.bracketTo ? ('$' + (b.bracketTo | number)) : 'Above' }}</td>
+                  <td>{{ currentSymbol }}{{ b.bracketFrom | number }} - {{ b.bracketTo ? (currentSymbol + (b.bracketTo | number)) : 'Above' }}</td>
                   <td><span class="badge badge-neutral">{{ b.rate }}%</span></td>
-                  <td>\${{ b.taxableAmountInBracket | number }}</td>
-                  <td class="text-right font-bold text-danger">\${{ b.taxForBracket | number }}</td>
+                  <td>{{ currentSymbol }}{{ b.taxableAmountInBracket | number }}</td>
+                  <td class="text-right font-bold text-danger">{{ currentSymbol }}{{ b.taxForBracket | number }}</td>
                 </tr>
               </tbody>
             </table>
@@ -166,7 +174,7 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
       padding: 20px;
       text-align: center;
       .net-sub { font-size: 0.75rem; font-weight: 800; color: #4f46e5; letter-spacing: 0.05em; }
-      .net-val { font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: #1e1b4b; margin: 4px 0; }
+      .net-val { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; color: #1e1b4b; margin: 4px 0; }
       .monthly-sub { font-size: 0.85rem; color: #64748b; }
     }
     .metric-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -188,32 +196,83 @@ import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models
     .text-right { text-align: right; }
   `]
 })
-export class TaxCalculatorComponent implements OnInit {
+export class TaxCalculatorComponent implements OnInit, OnDestroy {
   countries: CountryInfo[] = [];
-  selectedCountry = 'United States';
-  currentCurrency = 'USD';
+  selectedCountry = 'India';
+  currentCurrency = 'INR';
+  currentSymbol = '₹';
 
-  baseSalary = 120000;
-  allowances = 12000;
-  deductions = 4000;
+  baseSalary = 1500000;
+  allowances = 150000;
+  deductions = 50000;
+
+  sliderMin = 300000;
+  sliderMax = 6000000;
+  sliderStep = 50000;
 
   result: TaxCalculationResponse | null = null;
+  private currencySub: Subscription | null = null;
 
   constructor(
     private masterDataService: MasterDataService,
-    private salaryService: SalaryService
+    private salaryService: SalaryService,
+    private currencyService: CurrencyService
   ) {}
 
   ngOnInit() {
     this.masterDataService.getCountries().subscribe(c => {
       this.countries = c;
-      this.calculate();
+      // Sync initial state with active currency
+      const active = this.currencyService.currentCurrency;
+      if (active.code === 'INR') {
+        this.selectedCountry = 'India';
+      } else if (active.code === 'GBP') {
+        this.selectedCountry = 'United Kingdom';
+      } else if (active.code === 'EUR') {
+        this.selectedCountry = 'Germany';
+      } else {
+        this.selectedCountry = 'United States';
+      }
+      this.onCountryChange();
     });
+
+    this.currencySub = this.currencyService.activeCurrency$.subscribe(curr => {
+      if (this.countries.length > 0) {
+        if (curr.code === 'INR') this.selectedCountry = 'India';
+        else if (curr.code === 'GBP') this.selectedCountry = 'United Kingdom';
+        else if (curr.code === 'EUR') this.selectedCountry = 'Germany';
+        else if (curr.code === 'USD') this.selectedCountry = 'United States';
+        this.onCountryChange();
+      }
+    });
+  }
+
+  ngOnDestroy() {
+    this.currencySub?.unsubscribe();
   }
 
   onCountryChange() {
     const c = this.countries.find(item => item.name === this.selectedCountry);
-    if (c) this.currentCurrency = c.currency;
+    if (c) {
+      this.currentCurrency = c.currency;
+      if (this.currentCurrency === 'INR') {
+        this.currentSymbol = '₹';
+        this.sliderMin = 300000;
+        this.sliderMax = 6000000;
+        this.sliderStep = 50000;
+        this.baseSalary = 1500000;
+        this.allowances = 150000;
+        this.deductions = 50000;
+      } else {
+        this.currentSymbol = c.currency === 'GBP' ? '£' : c.currency === 'EUR' ? '€' : '$';
+        this.sliderMin = 20000;
+        this.sliderMax = 350000;
+        this.sliderStep = 5000;
+        this.baseSalary = 120000;
+        this.allowances = 12000;
+        this.deductions = 4000;
+      }
+    }
     this.calculate();
   }
 

@@ -1,7 +1,9 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { AnalyticsService } from '../../core/services/analytics.service';
+import { CurrencyConfig, CurrencyService } from '../../core/services/currency.service';
 import { DashboardMetrics, DepartmentDistribution, PayEquity } from '../../core/models/models';
 import { Chart, registerables } from 'chart.js';
+import { Subscription } from 'rxjs';
 
 Chart.register(...registerables);
 
@@ -13,7 +15,12 @@ Chart.register(...registerables);
       <div class="dashboard-header">
         <div>
           <h2>Executive Compensation Dashboard</h2>
-          <p class="text-muted">Global payroll overview, distribution analysis & pay equity for 10,000 employees</p>
+          <p class="text-muted">
+            Global payroll overview, distribution analysis & pay equity for 10,000 employees
+            <span class="active-currency-badge">
+              Viewing in {{ activeCurrency.flag }} {{ activeCurrency.code }} ({{ activeCurrency.symbol }})
+            </span>
+          </p>
         </div>
         <div class="action-buttons">
           <button class="btn btn-secondary" (click)="refreshData()">
@@ -43,30 +50,30 @@ Chart.register(...registerables);
           </div>
         </div>
 
-        <!-- Global Monthly Payroll (USD) -->
+        <!-- Global Monthly Payroll in Active Selected Currency -->
         <div class="glass-card kpi-card">
           <div class="kpi-icon-box bg-emerald">
-            <i class="fa-solid fa-dollar-sign"></i>
+            <span class="curr-icon">{{ activeCurrency.symbol }}</span>
           </div>
           <div class="kpi-info">
-            <span class="kpi-label">MONTHLY PAYROLL (USD)</span>
-            <div class="kpi-value">\${{ (metrics?.totalMonthlyPayrollByCurrency?.['USD'] || 14850000) / 1000000 | number:'1.2-2' }}M</div>
+            <span class="kpi-label">MONTHLY PAYROLL ({{ activeCurrency.code }})</span>
+            <div class="kpi-value">{{ formatPayroll(monthlyPayrollUsd) }}</div>
             <div class="kpi-sub text-muted">
-              Annual: \${{ ((metrics?.totalMonthlyPayrollByCurrency?.['USD'] || 14850000) * 12) / 1000000 | number:'1.1-1' }}M
+              Annualized: {{ formatPayroll(monthlyPayrollUsd * 12) }}
             </div>
           </div>
         </div>
 
-        <!-- Global Multi-Currency Aggregations -->
+        <!-- Average Employee Salary in Active Selected Currency -->
         <div class="glass-card kpi-card">
           <div class="kpi-icon-box bg-cyan">
-            <i class="fa-solid fa-globe"></i>
+            <i class="fa-solid fa-coins"></i>
           </div>
           <div class="kpi-info">
-            <span class="kpi-label">UK & EU PAYROLL</span>
-            <div class="kpi-value">£3.6M / €4.9M</div>
+            <span class="kpi-label">AVG ANNUAL SALARY ({{ activeCurrency.code }})</span>
+            <div class="kpi-value">{{ formatAmount(averageSalaryUsd) }}</div>
             <div class="kpi-sub text-muted">
-              India: ₹78.5M INR / mo
+              Median: {{ formatAmount(averageSalaryUsd * 0.94) }}
             </div>
           </div>
         </div>
@@ -106,7 +113,7 @@ Chart.register(...registerables);
         <div class="glass-card">
           <div class="card-header">
             <div>
-              <div class="card-title">Payroll by Currency Volume</div>
+              <div class="card-title">Payroll Volume by Currency</div>
               <div class="card-subtitle">Monthly expenditure split across 9 global regions</div>
             </div>
             <span class="badge badge-success">Multi-Currency</span>
@@ -122,9 +129,9 @@ Chart.register(...registerables);
         <div class="card-header">
           <div>
             <div class="card-title">Department Compensation Ranges (Min, Avg, Max)</div>
-            <div class="card-subtitle">Base salary distribution in USD equivalent across departments</div>
+            <div class="card-subtitle">Base salary distribution in {{ activeCurrency.name }} ({{ activeCurrency.code }}) across departments</div>
           </div>
-          <span class="badge badge-neutral">Annualized (USD)</span>
+          <span class="badge badge-neutral">Annualized ({{ activeCurrency.code }})</span>
         </div>
         <div class="chart-container-tall">
           <canvas #salaryDistChart></canvas>
@@ -143,7 +150,7 @@ Chart.register(...registerables);
               <thead>
                 <tr>
                   <th>Country</th>
-                  <th>Currency</th>
+                  <th>Native Currency</th>
                   <th>Employees</th>
                   <th>% of Org</th>
                 </tr>
@@ -167,12 +174,12 @@ Chart.register(...registerables);
           </div>
         </div>
 
-        <!-- Pay Equity & Salary Spread Analysis -->
+        <!-- Pay Equity & Salary Spread Analysis in Active Currency -->
         <div class="glass-card">
           <div class="card-header">
             <div>
-              <div class="card-title">Pay Equity & Salary Spread Ratio</div>
-              <div class="card-subtitle">Min vs Max spread by Job Level</div>
+              <div class="card-title">Pay Equity & Salary Spread Ratio ({{ activeCurrency.code }})</div>
+              <div class="card-subtitle">Min vs Max compensation spread by Job Level</div>
             </div>
           </div>
           <div class="table-responsive">
@@ -180,16 +187,16 @@ Chart.register(...registerables);
               <thead>
                 <tr>
                   <th>Designation</th>
-                  <th>Min Pay</th>
-                  <th>Max Pay</th>
-                  <th>Spread Ratio</th>
+                  <th>Min Pay ({{ activeCurrency.symbol }})</th>
+                  <th>Max Pay ({{ activeCurrency.symbol }})</th>
+                  <th>Spread</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let pe of payEquityList | slice:0:6">
                   <td class="font-semibold">{{ pe.designationTitle }}</td>
-                  <td>\${{ pe.minSalary | number }}</td>
-                  <td>\${{ pe.maxSalary | number }}</td>
+                  <td>{{ formatAmount(pe.minSalary) }}</td>
+                  <td>{{ formatAmount(pe.maxSalary) }}</td>
                   <td>
                     <span class="badge" [ngClass]="pe.salarySpreadRatio > 2.0 ? 'badge-warning' : 'badge-success'">
                       {{ pe.salarySpreadRatio }}x
@@ -217,6 +224,24 @@ Chart.register(...registerables);
         font-weight: 800;
         color: #0f172a;
       }
+    }
+
+    .active-currency-badge {
+      display: inline-block;
+      margin-left: 8px;
+      background: #eef2ff;
+      color: #4f46e5;
+      font-weight: 700;
+      font-size: 0.725rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #c7d2fe;
+    }
+
+    .curr-icon {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
     }
 
     .action-buttons {
@@ -265,7 +290,7 @@ Chart.register(...registerables);
 
         .kpi-value {
           font-family: 'Outfit', sans-serif;
-          font-size: 1.6rem;
+          font-size: 1.55rem;
           font-weight: 800;
           color: #0f172a;
           line-height: 1.1;
@@ -332,7 +357,7 @@ Chart.register(...registerables);
     }
   `]
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
+export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('deptChart') deptChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('currencyChart') currencyChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('salaryDistChart') salaryDistChartRef!: ElementRef<HTMLCanvasElement>;
@@ -342,9 +367,25 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   payEquityList: PayEquity[] = [];
   loading = false;
 
-  private charts: Chart[] = [];
+  monthlyPayrollUsd = 14850000;
+  averageSalaryUsd = 94500;
+  activeCurrency: CurrencyConfig;
 
-  constructor(private analyticsService: AnalyticsService) {}
+  private charts: Chart[] = [];
+  private currencySub: Subscription;
+
+  constructor(
+    private analyticsService: AnalyticsService,
+    private currencyService: CurrencyService
+  ) {
+    this.activeCurrency = this.currencyService.currentCurrency;
+    this.currencySub = this.currencyService.activeCurrency$.subscribe(c => {
+      this.activeCurrency = c;
+      if (this.metrics) {
+        this.initCharts();
+      }
+    });
+  }
 
   ngOnInit() {
     this.loadData();
@@ -356,10 +397,16 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
+  ngOnDestroy() {
+    this.currencySub?.unsubscribe();
+    this.charts.forEach(c => c.destroy());
+  }
+
   loadData() {
     this.loading = true;
     this.analyticsService.getDashboardMetrics().subscribe(m => {
       this.metrics = m;
+      this.monthlyPayrollUsd = m.totalMonthlyPayrollByCurrency?.['USD'] || 14850000;
       this.loading = false;
       setTimeout(() => this.initCharts(), 50);
     });
@@ -378,10 +425,17 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.loadData();
   }
 
+  formatAmount(amountInUsd: number): string {
+    return this.currencyService.formatUsdAmount(amountInUsd);
+  }
+
+  formatPayroll(amountInUsd: number): string {
+    return this.currencyService.formatUsdAmount(amountInUsd, true);
+  }
+
   private initCharts() {
     if (!this.deptChartRef || !this.currencyChartRef || !this.metrics) return;
 
-    // Destroy existing charts
     this.charts.forEach(c => c.destroy());
     this.charts = [];
 
@@ -442,19 +496,22 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   private initSalaryDistChart() {
     if (!this.salaryDistChartRef || this.distributions.length === 0) return;
 
+    const rate = this.activeCurrency.rateToUsd;
+    const symbol = this.activeCurrency.symbol;
+
     const labels = this.distributions.map(d => d.departmentName);
-    const minData = this.distributions.map(d => d.minSalary);
-    const avgData = this.distributions.map(d => d.averageSalary);
-    const maxData = this.distributions.map(d => d.maxSalary);
+    const minData = this.distributions.map(d => Math.round(d.minSalary * rate));
+    const avgData = this.distributions.map(d => Math.round(d.averageSalary * rate));
+    const maxData = this.distributions.map(d => Math.round(d.maxSalary * rate));
 
     const c3 = new Chart(this.salaryDistChartRef.nativeElement, {
       type: 'bar',
       data: {
         labels: labels,
         datasets: [
-          { label: 'Min Salary', data: minData, backgroundColor: '#94a3b8', borderRadius: 4 },
-          { label: 'Average Salary', data: avgData, backgroundColor: '#4f46e5', borderRadius: 4 },
-          { label: 'Max Salary', data: maxData, backgroundColor: '#10b981', borderRadius: 4 }
+          { label: `Min (${symbol})`, data: minData, backgroundColor: '#94a3b8', borderRadius: 4 },
+          { label: `Average (${symbol})`, data: avgData, backgroundColor: '#4f46e5', borderRadius: 4 },
+          { label: `Max (${symbol})`, data: maxData, backgroundColor: '#10b981', borderRadius: 4 }
         ]
       },
       options: {
@@ -464,7 +521,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           legend: { position: 'top', labels: { font: { family: 'Plus Jakarta Sans' } } }
         },
         scales: {
-          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { callback: (v) => '$' + Number(v).toLocaleString() } },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#f1f5f9' },
+            ticks: {
+              callback: (v) => symbol + Number(v).toLocaleString()
+            }
+          },
           x: { grid: { display: false } }
         }
       }

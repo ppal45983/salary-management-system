@@ -1,4 +1,5 @@
 import { Component, Input } from '@angular/core';
+import { CurrencyConfig, CurrencyService } from '../../../core/services/currency.service';
 
 @Component({
   selector: 'app-navbar',
@@ -18,12 +19,22 @@ import { Component, Input } from '@angular/core';
           <span>10,000 Global Records</span>
         </div>
 
-        <!-- Multi-country flag pills -->
-        <div class="country-pills">
-          <span class="flag-pill" title="United States">🇺🇸 USD</span>
-          <span class="flag-pill" title="United Kingdom">🇬🇧 GBP</span>
-          <span class="flag-pill" title="European Union">🇪🇺 EUR</span>
-          <span class="flag-pill" title="India">🇮🇳 INR</span>
+        <!-- Interactive Multi-Currency Switcher -->
+        <div class="currency-switcher">
+          <span class="switcher-label">View In:</span>
+          <div class="country-pills">
+            <button
+              *ngFor="let c of currencies"
+              type="button"
+              class="flag-pill"
+              [class.active]="activeCurrency.code === c.code"
+              (click)="onSelectCurrency(c.code)"
+              [title]="'Switch entire dashboard to ' + c.name + ' (' + c.symbol + ')'"
+            >
+              <span class="flag-icon">{{ c.flag }}</span>
+              <span class="curr-code">{{ c.code }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- Notifications -->
@@ -92,18 +103,58 @@ import { Component, Input } from '@angular/core';
       }
     }
 
+    .currency-switcher {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      padding: 4px 6px 4px 10px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+
+      .switcher-label {
+        font-size: 0.725rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+    }
+
     .country-pills {
       display: flex;
-      gap: 6px;
+      gap: 4px;
 
       .flag-pill {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        font-size: 0.725rem;
-        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        font-size: 0.75rem;
+        font-weight: 700;
         color: #475569;
-        padding: 4px 8px;
-        border-radius: 6px;
+        padding: 5px 10px;
+        border-radius: 7px;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+        .flag-icon { font-size: 0.85rem; }
+        .curr-code { font-family: var(--font-primary); font-size: 0.725rem; }
+
+        &:hover {
+          background: #f1f5f9;
+          color: #0f172a;
+          border-color: #94a3b8;
+          transform: translateY(-1px);
+        }
+
+        &.active {
+          background: #4f46e5;
+          color: #ffffff;
+          border-color: #4338ca;
+          box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+        }
       }
     }
 
@@ -143,4 +194,18 @@ import { Component, Input } from '@angular/core';
 export class NavbarComponent {
   @Input() title: string = 'Compensation Dashboard';
   @Input() subtitle: string = 'Real-time multi-country salary management & analytics';
+
+  currencies: CurrencyConfig[] = CurrencyService.CURRENCIES.slice(0, 4); // USD, INR, GBP, EUR
+  activeCurrency: CurrencyConfig;
+
+  constructor(private currencyService: CurrencyService) {
+    this.activeCurrency = this.currencyService.currentCurrency;
+    this.currencyService.activeCurrency$.subscribe(curr => {
+      this.activeCurrency = curr;
+    });
+  }
+
+  onSelectCurrency(code: string) {
+    this.currencyService.setCurrency(code);
+  }
 }
