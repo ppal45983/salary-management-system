@@ -180,12 +180,17 @@ export class MockDataService {
         count: d.employeeCount || 1000,
         percentage: Math.round(((d.employeeCount || 1000) / total) * 1000) / 10
       })),
-      headcountByCountry: this.countries.map((c, idx) => ({
-        country: c.name,
-        currency: c.currency,
-        count: idx === 0 ? 3200 : idx === 1 ? 1800 : idx === 2 ? 2200 : idx === 3 ? 900 : 400,
-        percentage: idx === 0 ? 32.0 : idx === 1 ? 18.0 : idx === 2 ? 22.0 : idx === 3 ? 9.0 : 4.0
-      })),
+      headcountByCountry: [
+        { country: 'United States', currency: 'USD', count: 3500, percentage: 35.0 },
+        { country: 'India', currency: 'INR', count: 2200, percentage: 22.0 },
+        { country: 'United Kingdom', currency: 'GBP', count: 1500, percentage: 15.0 },
+        { country: 'Germany', currency: 'EUR', count: 800, percentage: 8.0 },
+        { country: 'France', currency: 'EUR', count: 600, percentage: 6.0 },
+        { country: 'Canada', currency: 'CAD', count: 500, percentage: 5.0 },
+        { country: 'Australia', currency: 'AUD', count: 400, percentage: 4.0 },
+        { country: 'Japan', currency: 'JPY', count: 300, percentage: 3.0 },
+        { country: 'Singapore', currency: 'SGD', count: 200, percentage: 2.0 }
+      ],
       headcountByStatus: [
         { status: 'ACTIVE', count: 9750 },
         { status: 'ON_LEAVE', count: 250 }
