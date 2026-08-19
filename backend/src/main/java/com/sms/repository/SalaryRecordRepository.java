@@ -65,4 +65,19 @@ public interface SalaryRecordRepository extends JpaRepository<SalaryRecord, Long
     @Query("SELECT s FROM SalaryRecord s WHERE s.status = 'ACTIVE' AND s.isActive = true " +
            "AND s.payFrequency = :payFrequency ORDER BY s.employeeId")
     Page<SalaryRecord> findForPayroll(@Param("payFrequency") String payFrequency, Pageable pageable);
+
+    /**
+     * Find all active records ordered by creation date desc.
+     */
+    Page<SalaryRecord> findByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
+
+    /**
+     * Find all records with status filter.
+     */
+    Page<SalaryRecord> findByStatusAndIsActiveTrueOrderByCreatedAtDesc(String status, Pageable pageable);
+
+    /**
+     * Find all records for a specific employee ID.
+     */
+    Page<SalaryRecord> findByEmployeeIdAndIsActiveTrueOrderByCreatedAtDesc(Long employeeId, Pageable pageable);
 }
