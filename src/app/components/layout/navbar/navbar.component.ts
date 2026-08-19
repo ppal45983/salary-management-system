@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CurrencyConfig, CurrencyService } from '../../../core/services/currency.service';
 
 @Component({
@@ -13,10 +13,16 @@ import { CurrencyConfig, CurrencyService } from '../../../core/services/currency
       </div>
 
       <div class="navbar-right">
-        <!-- Global Status Tag -->
-        <div class="status-pill">
-          <span class="status-dot"></span>
-          <span>10,000 Global Records</span>
+        <!-- Live FX Exchange Rate Ticker Badge -->
+        <div class="live-fx-pill" (click)="refreshRates()" title="Live Foreign Exchange Rates (Click to Refresh)">
+          <span class="live-pulse"></span>
+          <span class="fx-text">
+            <i class="fa-solid fa-chart-line"></i>
+            Live FX: <strong>$1 = ₹{{ liveStatus.inrRate | number:'1.2-2' }}</strong>
+          </span>
+          <button class="fx-refresh-btn" [class.fa-spin]="refreshing" title="Refresh Live Rates">
+            <i class="fa-solid fa-arrows-rotate"></i>
+          </button>
         </div>
 
         <!-- Interactive Multi-Currency Switcher -->
@@ -29,7 +35,7 @@ import { CurrencyConfig, CurrencyService } from '../../../core/services/currency
               class="flag-pill"
               [class.active]="activeCurrency.code === c.code"
               (click)="onSelectCurrency(c.code)"
-              [title]="'Switch entire dashboard to ' + c.name + ' (' + c.symbol + ')'"
+              [title]="'Switch entire dashboard to ' + c.name + ' (' + c.symbol + ') - Live Rate: 1 USD = ' + c.rateToUsd"
             >
               <span class="flag-icon">{{ c.flag }}</span>
               <span class="curr-code">{{ c.code }}</span>
@@ -79,10 +85,10 @@ import { CurrencyConfig, CurrencyService } from '../../../core/services/currency
     .navbar-right {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 14px;
     }
 
-    .status-pill {
+    .live-fx-pill {
       display: flex;
       align-items: center;
       gap: 8px;
@@ -90,17 +96,49 @@ import { CurrencyConfig, CurrencyService } from '../../../core/services/currency
       border: 1px solid #bbf7d0;
       color: #166534;
       font-size: 0.775rem;
-      font-weight: 700;
+      font-weight: 600;
       padding: 6px 12px;
       border-radius: 999px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s;
 
-      .status-dot {
+      &:hover {
+        background: #dcfce7;
+        border-color: #86efac;
+      }
+
+      .live-pulse {
         width: 7px;
         height: 7px;
         background: #22c55e;
         border-radius: 50%;
-        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.35);
+        animation: pulse 2s infinite;
       }
+
+      .fx-text {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        strong { color: #14532d; font-weight: 800; }
+      }
+
+      .fx-refresh-btn {
+        background: none;
+        border: none;
+        color: #166534;
+        cursor: pointer;
+        padding: 0 2px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+      }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
     }
 
     .currency-switcher {
@@ -191,21 +229,37 @@ import { CurrencyConfig, CurrencyService } from '../../../core/services/currency
     }
   `]
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit {
   @Input() title: string = 'Compensation Dashboard';
   @Input() subtitle: string = 'Real-time multi-country salary management & analytics';
 
-  currencies: CurrencyConfig[] = CurrencyService.CURRENCIES.slice(0, 4); // USD, INR, GBP, EUR
+  currencies: CurrencyConfig[] = [];
   activeCurrency: CurrencyConfig;
+  liveStatus = { isLive: false, lastUpdated: 'Just now', inrRate: 95.76 };
+  refreshing = false;
 
   constructor(private currencyService: CurrencyService) {
+    this.currencies = this.currencyService.currencies.slice(0, 4); // USD, INR, GBP, EUR
     this.activeCurrency = this.currencyService.currentCurrency;
+  }
+
+  ngOnInit() {
     this.currencyService.activeCurrency$.subscribe(curr => {
       this.activeCurrency = curr;
+    });
+
+    this.currencyService.liveStatus$.subscribe(status => {
+      this.liveStatus = status;
+      this.refreshing = false;
     });
   }
 
   onSelectCurrency(code: string) {
     this.currencyService.setCurrency(code);
+  }
+
+  refreshRates() {
+    this.refreshing = true;
+    this.currencyService.fetchLiveExchangeRates();
   }
 }
