@@ -53,21 +53,74 @@ export class MockDataService {
   ];
 
   public taxBrackets: TaxBracket[] = [
+    // United States (USD)
     { id: 1, country: 'United States', taxYear: 2024, incomeFrom: 0, incomeTo: 11600, taxRate: 10.0, currency: 'USD', description: 'Bracket 1 (10%)' },
     { id: 2, country: 'United States', taxYear: 2024, incomeFrom: 11600, incomeTo: 47150, taxRate: 12.0, currency: 'USD', description: 'Bracket 2 (12%)' },
     { id: 3, country: 'United States', taxYear: 2024, incomeFrom: 47150, incomeTo: 100525, taxRate: 22.0, currency: 'USD', description: 'Bracket 3 (22%)' },
     { id: 4, country: 'United States', taxYear: 2024, incomeFrom: 100525, incomeTo: 191950, taxRate: 24.0, currency: 'USD', description: 'Bracket 4 (24%)' },
-    { id: 5, country: 'United States', taxYear: 2024, incomeFrom: 191950, incomeTo: 999999999, taxRate: 32.0, currency: 'USD', description: 'Bracket 5 (32%)' },
-    { id: 6, country: 'United Kingdom', taxYear: 2024, incomeFrom: 0, incomeTo: 12570, taxRate: 0.0, currency: 'GBP', description: 'Personal Allowance (0%)' },
-    { id: 7, country: 'United Kingdom', taxYear: 2024, incomeFrom: 12570, incomeTo: 50270, taxRate: 20.0, currency: 'GBP', description: 'Basic Rate (20%)' },
-    { id: 8, country: 'United Kingdom', taxYear: 2024, incomeFrom: 50270, incomeTo: 125140, taxRate: 40.0, currency: 'GBP', description: 'Higher Rate (40%)' },
-    { id: 9, country: 'United Kingdom', taxYear: 2024, incomeFrom: 125140, incomeTo: 999999999, taxRate: 45.0, currency: 'GBP', description: 'Additional Rate (45%)' },
-    { id: 10, country: 'India', taxYear: 2024, incomeFrom: 0, incomeTo: 300000, taxRate: 0.0, currency: 'INR', description: 'Exempt Bracket (0%)' },
-    { id: 11, country: 'India', taxYear: 2024, incomeFrom: 300000, incomeTo: 600000, taxRate: 5.0, currency: 'INR', description: 'Slab 1 (5%)' },
-    { id: 12, country: 'India', taxYear: 2024, incomeFrom: 600000, incomeTo: 900000, taxRate: 10.0, currency: 'INR', description: 'Slab 2 (10%)' },
-    { id: 13, country: 'India', taxYear: 2024, incomeFrom: 900000, incomeTo: 1200000, taxRate: 15.0, currency: 'INR', description: 'Slab 3 (15%)' },
-    { id: 14, country: 'India', taxYear: 2024, incomeFrom: 1200000, incomeTo: 1500000, taxRate: 20.0, currency: 'INR', description: 'Slab 4 (20%)' },
-    { id: 15, country: 'India', taxYear: 2024, incomeFrom: 1500000, incomeTo: 999999999, taxRate: 30.0, currency: 'INR', description: 'Slab 5 (30%)' }
+    { id: 5, country: 'United States', taxYear: 2024, incomeFrom: 191950, incomeTo: 243725, taxRate: 32.0, currency: 'USD', description: 'Bracket 5 (32%)' },
+    { id: 6, country: 'United States', taxYear: 2024, incomeFrom: 243725, incomeTo: 609350, taxRate: 35.0, currency: 'USD', description: 'Bracket 6 (35%)' },
+    { id: 7, country: 'United States', taxYear: 2024, incomeFrom: 609350, incomeTo: 999999999, taxRate: 37.0, currency: 'USD', description: 'Bracket 7 (37%)' },
+
+    // United Kingdom (GBP)
+    { id: 8, country: 'United Kingdom', taxYear: 2024, incomeFrom: 0, incomeTo: 12570, taxRate: 0.0, currency: 'GBP', description: 'Personal Allowance (0%)' },
+    { id: 9, country: 'United Kingdom', taxYear: 2024, incomeFrom: 12570, incomeTo: 50270, taxRate: 20.0, currency: 'GBP', description: 'Basic Rate (20%)' },
+    { id: 10, country: 'United Kingdom', taxYear: 2024, incomeFrom: 50270, incomeTo: 125140, taxRate: 40.0, currency: 'GBP', description: 'Higher Rate (40%)' },
+    { id: 11, country: 'United Kingdom', taxYear: 2024, incomeFrom: 125140, incomeTo: 999999999, taxRate: 45.0, currency: 'GBP', description: 'Additional Rate (45%)' },
+
+    // India (INR) - New Tax Regime 2024
+    { id: 12, country: 'India', taxYear: 2024, incomeFrom: 0, incomeTo: 300000, taxRate: 0.0, currency: 'INR', description: 'Exempt Nil Slab (0%)' },
+    { id: 13, country: 'India', taxYear: 2024, incomeFrom: 300000, incomeTo: 600000, taxRate: 5.0, currency: 'INR', description: 'Slab 1 (5%)' },
+    { id: 14, country: 'India', taxYear: 2024, incomeFrom: 600000, incomeTo: 900000, taxRate: 10.0, currency: 'INR', description: 'Slab 2 (10%)' },
+    { id: 15, country: 'India', taxYear: 2024, incomeFrom: 900000, incomeTo: 1200000, taxRate: 15.0, currency: 'INR', description: 'Slab 3 (15%)' },
+    { id: 16, country: 'India', taxYear: 2024, incomeFrom: 1200000, incomeTo: 1500000, taxRate: 20.0, currency: 'INR', description: 'Slab 4 (20%)' },
+    { id: 17, country: 'India', taxYear: 2024, incomeFrom: 1500000, incomeTo: 999999999, taxRate: 30.0, currency: 'INR', description: 'Slab 5 (30%)' },
+
+    // Germany (EUR)
+    { id: 18, country: 'Germany', taxYear: 2024, incomeFrom: 0, incomeTo: 11604, taxRate: 0.0, currency: 'EUR', description: 'Basic Tax-Free Allowance (0%)' },
+    { id: 19, country: 'Germany', taxYear: 2024, incomeFrom: 11604, incomeTo: 47348, taxRate: 19.0, currency: 'EUR', description: 'Zone 2 Initial Progressive (19%)' },
+    { id: 20, country: 'Germany', taxYear: 2024, incomeFrom: 47348, incomeTo: 102699, taxRate: 42.0, currency: 'EUR', description: 'Zone 3 High Rate (42%)' },
+    { id: 21, country: 'Germany', taxYear: 2024, incomeFrom: 102699, incomeTo: 999999999, taxRate: 45.0, currency: 'EUR', description: 'Top Wealth Tax (45%)' },
+
+    // France (EUR)
+    { id: 22, country: 'France', taxYear: 2024, incomeFrom: 0, incomeTo: 11294, taxRate: 0.0, currency: 'EUR', description: 'Exempt Tranche (0%)' },
+    { id: 23, country: 'France', taxYear: 2024, incomeFrom: 11294, incomeTo: 28797, taxRate: 11.0, currency: 'EUR', description: 'Tranche 2 (11%)' },
+    { id: 24, country: 'France', taxYear: 2024, incomeFrom: 28797, incomeTo: 82341, taxRate: 30.0, currency: 'EUR', description: 'Tranche 3 (30%)' },
+    { id: 25, country: 'France', taxYear: 2024, incomeFrom: 82341, incomeTo: 177106, taxRate: 41.0, currency: 'EUR', description: 'Tranche 4 (41%)' },
+    { id: 26, country: 'France', taxYear: 2024, incomeFrom: 177106, incomeTo: 999999999, taxRate: 45.0, currency: 'EUR', description: 'Top Tranche (45%)' },
+
+    // Canada (CAD)
+    { id: 27, country: 'Canada', taxYear: 2024, incomeFrom: 0, incomeTo: 55867, taxRate: 15.0, currency: 'CAD', description: 'Federal Bracket 1 (15%)' },
+    { id: 28, country: 'Canada', taxYear: 2024, incomeFrom: 55867, incomeTo: 111733, taxRate: 20.5, currency: 'CAD', description: 'Federal Bracket 2 (20.5%)' },
+    { id: 29, country: 'Canada', taxYear: 2024, incomeFrom: 111733, incomeTo: 173205, taxRate: 26.0, currency: 'CAD', description: 'Federal Bracket 3 (26%)' },
+    { id: 30, country: 'Canada', taxYear: 2024, incomeFrom: 173205, incomeTo: 246752, taxRate: 29.0, currency: 'CAD', description: 'Federal Bracket 4 (29%)' },
+    { id: 31, country: 'Canada', taxYear: 2024, incomeFrom: 246752, incomeTo: 999999999, taxRate: 33.0, currency: 'CAD', description: 'Federal Bracket 5 (33%)' },
+
+    // Australia (AUD)
+    { id: 32, country: 'Australia', taxYear: 2024, incomeFrom: 0, incomeTo: 18200, taxRate: 0.0, currency: 'AUD', description: 'Tax-Free Threshold (0%)' },
+    { id: 33, country: 'Australia', taxYear: 2024, incomeFrom: 18200, incomeTo: 45000, taxRate: 19.0, currency: 'AUD', description: 'Resident Bracket 1 (19%)' },
+    { id: 34, country: 'Australia', taxYear: 2024, incomeFrom: 45000, incomeTo: 120000, taxRate: 32.5, currency: 'AUD', description: 'Resident Bracket 2 (32.5%)' },
+    { id: 35, country: 'Australia', taxYear: 2024, incomeFrom: 120000, incomeTo: 180000, taxRate: 37.0, currency: 'AUD', description: 'Resident Bracket 3 (37%)' },
+    { id: 36, country: 'Australia', taxYear: 2024, incomeFrom: 180000, incomeTo: 999999999, taxRate: 45.0, currency: 'AUD', description: 'Top Resident Bracket (45%)' },
+
+    // Japan (JPY)
+    { id: 37, country: 'Japan', taxYear: 2024, incomeFrom: 0, incomeTo: 1949000, taxRate: 5.0, currency: 'JPY', description: 'National Bracket 1 (5%)' },
+    { id: 38, country: 'Japan', taxYear: 2024, incomeFrom: 1949000, incomeTo: 3299000, taxRate: 10.0, currency: 'JPY', description: 'National Bracket 2 (10%)' },
+    { id: 39, country: 'Japan', taxYear: 2024, incomeFrom: 3299000, incomeTo: 6994000, taxRate: 20.0, currency: 'JPY', description: 'National Bracket 3 (20%)' },
+    { id: 40, country: 'Japan', taxYear: 2024, incomeFrom: 6994000, incomeTo: 9240000, taxRate: 23.0, currency: 'JPY', description: 'National Bracket 4 (23%)' },
+    { id: 41, country: 'Japan', taxYear: 2024, incomeFrom: 9240000, incomeTo: 17100000, taxRate: 33.0, currency: 'JPY', description: 'National Bracket 5 (33%)' },
+    { id: 42, country: 'Japan', taxYear: 2024, incomeFrom: 17100000, incomeTo: 999999999, taxRate: 45.0, currency: 'JPY', description: 'National Bracket 6 (45%)' },
+
+    // Singapore (SGD)
+    { id: 43, country: 'Singapore', taxYear: 2024, incomeFrom: 0, incomeTo: 20000, taxRate: 0.0, currency: 'SGD', description: 'First $20,000 (0%)' },
+    { id: 44, country: 'Singapore', taxYear: 2024, incomeFrom: 20000, incomeTo: 30000, taxRate: 2.0, currency: 'SGD', description: 'Next $10,000 (2%)' },
+    { id: 45, country: 'Singapore', taxYear: 2024, incomeFrom: 30000, incomeTo: 40000, taxRate: 3.5, currency: 'SGD', description: 'Next $10,000 (3.5%)' },
+    { id: 46, country: 'Singapore', taxYear: 2024, incomeFrom: 40000, incomeTo: 80000, taxRate: 7.0, currency: 'SGD', description: 'Next $40,000 (7%)' },
+    { id: 47, country: 'Singapore', taxYear: 2024, incomeFrom: 80000, incomeTo: 120000, taxRate: 11.5, currency: 'SGD', description: 'Next $40,000 (11.5%)' },
+    { id: 48, country: 'Singapore', taxYear: 2024, incomeFrom: 120000, incomeTo: 160000, taxRate: 15.0, currency: 'SGD', description: 'Next $40,000 (15%)' },
+    { id: 49, country: 'Singapore', taxYear: 2024, incomeFrom: 160000, incomeTo: 200000, taxRate: 18.0, currency: 'SGD', description: 'Next $40,000 (18%)' },
+    { id: 50, country: 'Singapore', taxYear: 2024, incomeFrom: 200000, incomeTo: 320000, taxRate: 19.0, currency: 'SGD', description: 'Next $120,000 (19%)' },
+    { id: 51, country: 'Singapore', taxYear: 2024, incomeFrom: 320000, incomeTo: 999999999, taxRate: 22.0, currency: 'SGD', description: 'In excess of $320,000 (22%)' }
   ];
 
   public employees: Employee[] = [];
@@ -244,7 +297,10 @@ export class MockDataService {
     const ded = req.deductions || 0;
     const gross = base + allow;
 
-    const brackets = this.taxBrackets.filter(b => b.country === req.country || b.country === 'United States');
+    let brackets = this.taxBrackets.filter(b => b.country.toLowerCase() === (req.country || '').toLowerCase());
+    if (brackets.length === 0) {
+      brackets = this.taxBrackets.filter(b => b.country === 'United States');
+    }
     const breakdown: any[] = [];
     let totalTax = 0;
 

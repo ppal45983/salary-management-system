@@ -5,14 +5,21 @@ import { CurrencyConfig, CurrencyService } from '../../../core/services/currency
 import { CountryInfo, TaxCalculationResponse } from '../../../core/models/models';
 import { Subscription } from 'rxjs';
 
+interface BenchmarkPreset {
+  label: string;
+  amount: number;
+}
+
 @Component({
   selector: 'app-tax-calculator',
   template: `
     <div class="page-wrapper">
       <div class="page-header">
         <div>
-          <h2>Multi-Country Tax Simulator</h2>
-          <p class="text-muted">Test & simulate progressive income tax calculations across 9 countries with instant breakdown</p>
+          <h2>Multi-Country Progressive Tax Simulator</h2>
+          <p class="text-muted">
+            Official statutory progressive income tax calculations across 9 countries with bracket-by-bracket breakdown
+          </p>
         </div>
       </div>
 
@@ -23,20 +30,21 @@ import { Subscription } from 'rxjs';
             <div class="card-title">
               <i class="fa-solid fa-sliders text-primary"></i> Simulation Parameters
             </div>
+            <span class="badge badge-info">{{ currentCurrency }} Tax System</span>
           </div>
 
           <div class="form-group">
-            <label>Select Country</label>
+            <label>Select Jurisdiction / Country</label>
             <select class="form-control" [(ngModel)]="selectedCountry" (change)="onCountryChange()">
               <option *ngFor="let c of countries" [value]="c.name">
-                {{ c.name }} ({{ c.currency }})
+                {{ c.name }} ({{ c.currency }} • {{ c.symbol }})
               </option>
             </select>
           </div>
 
           <div class="form-group">
             <div class="label-row">
-              <label>Annual Base Salary ({{ currentCurrency }})</label>
+              <label>Annual Base Gross Salary ({{ currentCurrency }})</label>
               <span class="val-display font-bold">{{ currentSymbol }}{{ baseSalary | number }}</span>
             </div>
             <input
@@ -67,20 +75,18 @@ import { Subscription } from 'rxjs';
             </div>
           </div>
 
-          <!-- Preset Salary Buttons -->
+          <!-- Dynamic Preset Salary Buttons for Active Jurisdiction -->
           <div class="preset-group mt-16">
-            <span class="preset-label">Quick Benchmarks ({{ currentCurrency }}):</span>
-            <div class="preset-buttons" *ngIf="currentCurrency === 'INR'">
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(600000)">₹6L (Junior)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(1500000)">₹15L (Senior)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(2800000)">₹28L (Staff/Lead)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(5000000)">₹50L (Exec)</button>
-            </div>
-            <div class="preset-buttons" *ngIf="currentCurrency !== 'INR'">
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(60000)">{{ currentSymbol }}60k (Junior)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(120000)">{{ currentSymbol }}120k (Senior)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(180000)">{{ currentSymbol }}180k (Staff/Lead)</button>
-              <button class="btn btn-secondary btn-sm" (click)="setPreset(250000)">{{ currentSymbol }}250k (Exec)</button>
+            <span class="preset-label">Standard Industry Benchmarks ({{ currentCountryName }}):</span>
+            <div class="preset-buttons">
+              <button
+                *ngFor="let p of currentPresets"
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="setPreset(p.amount)"
+              >
+                {{ p.label }}
+              </button>
             </div>
           </div>
         </div>
@@ -88,15 +94,18 @@ import { Subscription } from 'rxjs';
         <!-- Live Results Panel -->
         <div class="glass-card result-card" *ngIf="result">
           <div class="card-header">
-            <div class="card-title">
-              <i class="fa-solid fa-chart-pie text-success"></i> Calculation Breakdown
+            <div>
+              <div class="card-title">
+                <i class="fa-solid fa-chart-pie text-success"></i> {{ selectedCountry }} Tax Breakdown
+              </div>
+              <div class="card-subtitle">Calculated using official statutory progressive tax brackets</div>
             </div>
             <span class="badge badge-success">{{ selectedCountry }}</span>
           </div>
 
           <!-- Net Take Home Highlight -->
           <div class="net-highlight">
-            <div class="net-sub">ESTIMATED ANNUAL NET PAY</div>
+            <div class="net-sub">ESTIMATED ANNUAL NET TAKE-HOME</div>
             <div class="net-val">{{ currentSymbol }}{{ result.netSalary | number }} {{ currentCurrency }}</div>
             <div class="monthly-sub">
               Monthly Take-Home: <strong>{{ currentSymbol }}{{ (result.netSalary / 12) | number:'1.0-0' }} {{ currentCurrency }}</strong>
@@ -106,26 +115,26 @@ import { Subscription } from 'rxjs';
           <!-- Summary Metric Pills -->
           <div class="metric-row mt-16">
             <div class="metric-pill">
-              <span class="m-lbl">Gross Salary</span>
+              <span class="m-lbl">Taxable Gross</span>
               <span class="m-val font-bold">{{ currentSymbol }}{{ result.grossSalary | number }}</span>
             </div>
             <div class="metric-pill">
-              <span class="m-lbl">Income Tax</span>
+              <span class="m-lbl">Total Statutory Tax</span>
               <span class="m-val text-danger font-bold">{{ currentSymbol }}{{ result.totalTax | number }}</span>
             </div>
             <div class="metric-pill">
-              <span class="m-lbl">Effective Rate</span>
+              <span class="m-lbl">Effective Tax Rate</span>
               <span class="m-val text-primary font-bold">{{ result.effectiveTaxRate }}%</span>
             </div>
           </div>
 
           <!-- Progressive Tax Slabs Breakdown Table -->
           <div class="slabs-container mt-20" *ngIf="result.breakdown && result.breakdown.length > 0">
-            <div class="slab-title">PROGRESSIVE SLAB COMPUTATION ({{ currentCurrency }})</div>
+            <div class="slab-title">PROGRESSIVE SLAB-BY-SLAB COMPUTATION ({{ currentCurrency }})</div>
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>Bracket Range</th>
+                  <th>Statutory Tax Slab</th>
                   <th>Rate</th>
                   <th>Taxable in Slab</th>
                   <th class="text-right">Tax Amount</th>
@@ -134,7 +143,7 @@ import { Subscription } from 'rxjs';
               <tbody>
                 <tr *ngFor="let b of result.breakdown">
                   <td>{{ currentSymbol }}{{ b.bracketFrom | number }} - {{ b.bracketTo ? (currentSymbol + (b.bracketTo | number)) : 'Above' }}</td>
-                  <td><span class="badge badge-neutral">{{ b.rate }}%</span></td>
+                  <td><span class="badge badge-neutral font-bold">{{ b.rate }}%</span></td>
                   <td>{{ currentSymbol }}{{ b.taxableAmountInBracket | number }}</td>
                   <td class="text-right font-bold text-danger">{{ currentSymbol }}{{ b.taxForBracket | number }}</td>
                 </tr>
@@ -199,6 +208,7 @@ import { Subscription } from 'rxjs';
 export class TaxCalculatorComponent implements OnInit, OnDestroy {
   countries: CountryInfo[] = [];
   selectedCountry = 'India';
+  currentCountryName = 'India';
   currentCurrency = 'INR';
   currentSymbol = '₹';
 
@@ -210,6 +220,7 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
   sliderMax = 6000000;
   sliderStep = 50000;
 
+  currentPresets: BenchmarkPreset[] = [];
   result: TaxCalculationResponse | null = null;
   private currencySub: Subscription | null = null;
 
@@ -222,17 +233,12 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.masterDataService.getCountries().subscribe(c => {
       this.countries = c;
-      // Sync initial state with active currency
       const active = this.currencyService.currentCurrency;
-      if (active.code === 'INR') {
-        this.selectedCountry = 'India';
-      } else if (active.code === 'GBP') {
-        this.selectedCountry = 'United Kingdom';
-      } else if (active.code === 'EUR') {
-        this.selectedCountry = 'Germany';
-      } else {
-        this.selectedCountry = 'United States';
-      }
+      if (active.code === 'INR') this.selectedCountry = 'India';
+      else if (active.code === 'GBP') this.selectedCountry = 'United Kingdom';
+      else if (active.code === 'EUR') this.selectedCountry = 'Germany';
+      else this.selectedCountry = 'United States';
+
       this.onCountryChange();
     });
 
@@ -253,26 +259,86 @@ export class TaxCalculatorComponent implements OnInit, OnDestroy {
 
   onCountryChange() {
     const c = this.countries.find(item => item.name === this.selectedCountry);
-    if (c) {
-      this.currentCurrency = c.currency;
-      if (this.currentCurrency === 'INR') {
-        this.currentSymbol = '₹';
-        this.sliderMin = 300000;
-        this.sliderMax = 6000000;
-        this.sliderStep = 50000;
-        this.baseSalary = 1500000;
-        this.allowances = 150000;
-        this.deductions = 50000;
-      } else {
-        this.currentSymbol = c.currency === 'GBP' ? '£' : c.currency === 'EUR' ? '€' : '$';
-        this.sliderMin = 20000;
-        this.sliderMax = 350000;
-        this.sliderStep = 5000;
-        this.baseSalary = 120000;
-        this.allowances = 12000;
-        this.deductions = 4000;
-      }
+    this.currentCountryName = this.selectedCountry;
+
+    if (this.selectedCountry === 'India') {
+      this.currentCurrency = 'INR';
+      this.currentSymbol = '₹';
+      this.sliderMin = 300000;
+      this.sliderMax = 7500000;
+      this.sliderStep = 50000;
+      this.baseSalary = 1500000;
+      this.allowances = 150000;
+      this.deductions = 50000;
+      this.currentPresets = [
+        { label: '₹6L (Junior)', amount: 600000 },
+        { label: '₹15L (Senior)', amount: 1500000 },
+        { label: '₹28L (Staff/Lead)', amount: 2800000 },
+        { label: '₹50L (Exec)', amount: 5000000 }
+      ];
+    } else if (this.selectedCountry === 'Japan') {
+      this.currentCurrency = 'JPY';
+      this.currentSymbol = '¥';
+      this.sliderMin = 1000000;
+      this.sliderMax = 25000000;
+      this.sliderStep = 200000;
+      this.baseSalary = 6500000;
+      this.allowances = 600000;
+      this.deductions = 200000;
+      this.currentPresets = [
+        { label: '¥3.5M (Junior)', amount: 3500000 },
+        { label: '¥6.5M (Senior)', amount: 6500000 },
+        { label: '¥10M (Staff/Lead)', amount: 10000000 },
+        { label: '¥18M (Exec)', amount: 18000000 }
+      ];
+    } else if (this.selectedCountry === 'United Kingdom') {
+      this.currentCurrency = 'GBP';
+      this.currentSymbol = '£';
+      this.sliderMin = 15000;
+      this.sliderMax = 250000;
+      this.sliderStep = 5000;
+      this.baseSalary = 65000;
+      this.allowances = 6000;
+      this.deductions = 2000;
+      this.currentPresets = [
+        { label: '£30k (Junior)', amount: 30000 },
+        { label: '£65k (Senior)', amount: 65000 },
+        { label: '£100k (Staff/Lead)', amount: 100000 },
+        { label: '£160k (Exec)', amount: 160000 }
+      ];
+    } else if (this.selectedCountry === 'Germany' || this.selectedCountry === 'France') {
+      this.currentCurrency = 'EUR';
+      this.currentSymbol = '€';
+      this.sliderMin = 15000;
+      this.sliderMax = 300000;
+      this.sliderStep = 5000;
+      this.baseSalary = 75000;
+      this.allowances = 7000;
+      this.deductions = 2500;
+      this.currentPresets = [
+        { label: '€35k (Junior)', amount: 35000 },
+        { label: '€75k (Senior)', amount: 75000 },
+        { label: '€115k (Staff/Lead)', amount: 115000 },
+        { label: '€180k (Exec)', amount: 180000 }
+      ];
+    } else {
+      // US, Canada, Australia, Singapore
+      this.currentCurrency = c ? c.currency : 'USD';
+      this.currentSymbol = c ? c.symbol : '$';
+      this.sliderMin = 20000;
+      this.sliderMax = 400000;
+      this.sliderStep = 5000;
+      this.baseSalary = 120000;
+      this.allowances = 12000;
+      this.deductions = 4000;
+      this.currentPresets = [
+        { label: `${this.currentSymbol}60k (Junior)`, amount: 60000 },
+        { label: `${this.currentSymbol}120k (Senior)`, amount: 120000 },
+        { label: `${this.currentSymbol}180k (Staff/Lead)`, amount: 180000 },
+        { label: `${this.currentSymbol}250k (Exec)`, amount: 250000 }
+      ];
     }
+
     this.calculate();
   }
 
