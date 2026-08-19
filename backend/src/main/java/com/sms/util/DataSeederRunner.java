@@ -35,24 +35,30 @@ public class DataSeederRunner implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final TaxCalculationService taxCalculationService;
 
+    private static final String[] INDIAN_MALE_FIRST = {
+            "Pramod", "Prashant", "Rajat", "Rohit", "Rahul", "Sumeet", "Aaditya", "Vipul", "Chirag", "Ankit", "Vimal", "Amit", "Vikram", "Suresh", "Deepak", "Alok", "Manish", "Sachin", "Gaurav", "Sandeep"
+    };
+
+    private static final String[] INDIAN_FEMALE_FIRST = {
+            "Sheelu", "Riya", "Shilpi", "Renu", "Kalpana", "Jaya", "Nandini", "Ankita", "Ruchika", "Priya", "Ananya", "Pooja", "Neha", "Divya", "Sneha", "Sunita", "Kavita", "Megha", "Swati"
+    };
+
+    private static final String[] INDIAN_LAST_NAMES = {
+            "Pal", "Bisht", "Yadav", "Thakur", "Mishra", "Trivedi", "Rathore", "Batham", "Deora", "Aggarwal", "Dubey", "Chauhan", "Sharma", "Verma", "Kumar", "Singh", "Gupta", "Joshi", "Saxena", "Pandey"
+    };
+
     private static final String[] FIRST_NAMES = {
             "James", "Mary", "Robert", "Patricia", "John", "Jennifer", "Michael", "Linda", "David", "Elizabeth",
             "William", "Barbara", "Richard", "Susan", "Joseph", "Jessica", "Thomas", "Sarah", "Charles", "Karen",
-            "Christopher", "Nancy", "Daniel", "Lisa", "Matthew", "Betty", "Anthony", "Margaret", "Mark", "Sandra",
-            "Donald", "Ashley", "Steven", "Kimberly", "Paul", "Emily", "Andrew", "Donna", "Joshua", "Michelle",
-            "Kenneth", "Dorothy", "Kevin", "Carol", "Brian", "Amanda", "George", "Melissa", "Edward", "Deborah",
-            "Aarav", "Priya", "Rahul", "Ananya", "Rohan", "Sneha", "Aditya", "Pooja", "Vikram", "Neha",
-            "Wei", "Yuki", "Kenji", "Sakura", "Hiroshi", "Mei", "Jin", "Aoi", "Daiki", "Hina",
-            "Lukas", "Emma", "Maximilian", "Hannah", "Felix", "Mia", "Leon", "Sophie", "Paul", "Anna",
-            "Alexandre", "Camille", "Hugo", "Manon", "Antoine", "Lea", "Thomas", "Chloe", "Nicolas", "Ines"
+            "Alexander", "Sophia", "Liam", "Olivia", "Noah", "Emma", "Ethan", "Ava", "Mason", "Isabella",
+            "Lukas", "Hannah", "Maximilian", "Sophie", "Felix", "Mia", "Leon", "Paul", "Anna", "Jonas",
+            "Camille", "Antoine", "Louis", "Chloe", "Gabriel", "Lea", "Manon", "Hugo", "Thomas", "Ines",
+            "Kenji", "Yuki", "Sakura", "Ren", "Haruto", "Aoi", "Daiki", "Hina", "Hiroshi", "Mei"
     };
 
     private static final String[] LAST_NAMES = {
             "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
-            "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
-            "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson",
-            "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores",
-            "Sharma", "Patel", "Verma", "Gupta", "Reddy", "Mehta", "Iyer", "Nair", "Kapoor", "Chopra",
+            "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "White", "Harris", "Martin", "Clark",
             "Tanaka", "Sato", "Suzuki", "Takahashi", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Kobayashi", "Kato",
             "Mueller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer", "Wagner", "Becker", "Schulz", "Hoffmann",
             "Dubois", "Lambert", "Moreau", "Fournier", "Girard", "Bonnet", "Dupont", "Fontaine", "Rousseau", "Vincent"
@@ -212,12 +218,24 @@ public class DataSeederRunner implements CommandLineRunner {
         List<SalaryHistory> historyBatch = new ArrayList<>();
 
         for (int i = 1; i <= count; i++) {
-            String firstName = FIRST_NAMES[random.nextInt(FIRST_NAMES.length)];
-            String lastName = LAST_NAMES[random.nextInt(LAST_NAMES.length)];
+            String[] countryInfo = COUNTRIES[random.nextInt(COUNTRIES.length)];
+            String country = countryInfo[0];
+
+            String firstName;
+            String lastName;
+
+            if ("India".equals(country)) {
+                boolean isMale = random.nextBoolean();
+                firstName = isMale ? INDIAN_MALE_FIRST[random.nextInt(INDIAN_MALE_FIRST.length)] : INDIAN_FEMALE_FIRST[random.nextInt(INDIAN_FEMALE_FIRST.length)];
+                lastName = INDIAN_LAST_NAMES[random.nextInt(INDIAN_LAST_NAMES.length)];
+            } else {
+                firstName = FIRST_NAMES[random.nextInt(FIRST_NAMES.length)];
+                lastName = LAST_NAMES[random.nextInt(LAST_NAMES.length)];
+            }
+
             String empId = String.format("EMP-%05d", i);
             String email = String.format("%s.%s.%d@acme.com", firstName.toLowerCase(), lastName.toLowerCase(), i);
 
-            String[] countryInfo = COUNTRIES[random.nextInt(COUNTRIES.length)];
             Department dept = departments.get(random.nextInt(departments.size()));
             Designation desig = designations.get(random.nextInt(designations.size()));
 

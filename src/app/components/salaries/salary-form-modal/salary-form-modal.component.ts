@@ -79,19 +79,19 @@ import { SalaryService } from '../../../core/services/salary.service';
               <div class="calc-metrics">
                 <div class="calc-col">
                   <span class="c-title">Gross Salary</span>
-                  <span class="c-val">\${{ taxPreview.grossSalary | number }}</span>
+                  <span class="c-val">{{ getSymbol(formData.currency) }}{{ taxPreview.grossSalary | number }}</span>
                 </div>
                 <div class="calc-col">
                   <span class="c-title">Calculated Tax</span>
-                  <span class="c-val text-danger">-\${{ taxPreview.totalTax | number }}</span>
+                  <span class="c-val text-danger">-{{ getSymbol(formData.currency) }}{{ taxPreview.totalTax | number }}</span>
                 </div>
                 <div class="calc-col">
                   <span class="c-title">Net Annual Pay</span>
-                  <span class="c-val text-success font-bold">\${{ taxPreview.netSalary | number }}</span>
+                  <span class="c-val text-success font-bold">{{ getSymbol(formData.currency) }}{{ taxPreview.netSalary | number }}</span>
                 </div>
                 <div class="calc-col">
                   <span class="c-title">Monthly Net Take-Home</span>
-                  <span class="c-val text-primary font-bold">\${{ (taxPreview.netSalary / 12) | number:'1.0-0' }}</span>
+                  <span class="c-val text-primary font-bold">{{ getSymbol(formData.currency) }}{{ (taxPreview.netSalary / 12) | number:'1.0-0' }}</span>
                 </div>
               </div>
             </div>
@@ -247,6 +247,20 @@ export class SalaryFormModalComponent implements OnInit {
         this.saving = false;
         this.saved.emit(res);
       });
+    }
+  }
+
+  getSymbol(curr?: string): string {
+    switch (curr) {
+      case 'INR': return '₹';
+      case 'GBP': return '£';
+      case 'EUR': return '€';
+      case 'JPY': return '¥';
+      case 'CAD': return 'C$';
+      case 'AUD': return 'A$';
+      case 'SGD': return 'S$';
+      case 'USD':
+      default: return '$';
     }
   }
 }

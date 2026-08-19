@@ -83,15 +83,15 @@ import { SalaryService } from '../../../core/services/salary.service';
                 <tbody>
                   <tr>
                     <td>Base Basic Salary</td>
-                    <td class="text-right">\${{ slip.baseSalary | number }}</td>
+                    <td class="text-right">{{ getSymbol(slip.currency) }}{{ slip.baseSalary | number }}</td>
                   </tr>
                   <tr>
                     <td>Allowances & Benefits</td>
-                    <td class="text-right">\${{ slip.allowances | number }}</td>
+                    <td class="text-right">{{ getSymbol(slip.currency) }}{{ slip.allowances | number }}</td>
                   </tr>
                   <tr class="total-row">
                     <td><strong>Gross Earnings</strong></td>
-                    <td class="text-right"><strong>\${{ slip.grossSalary | number }}</strong></td>
+                    <td class="text-right"><strong>{{ getSymbol(slip.currency) }}{{ slip.grossSalary | number }}</strong></td>
                   </tr>
                 </tbody>
               </table>
@@ -104,15 +104,15 @@ import { SalaryService } from '../../../core/services/salary.service';
                 <tbody>
                   <tr>
                     <td>Standard Pre-Tax Deductions</td>
-                    <td class="text-right">\${{ slip.standardDeductions | number }}</td>
+                    <td class="text-right">{{ getSymbol(slip.currency) }}{{ slip.standardDeductions | number }}</td>
                   </tr>
                   <tr>
                     <td>Income Tax ({{ slip.country }})</td>
-                    <td class="text-right text-danger">\${{ slip.incomeTax | number }}</td>
+                    <td class="text-right text-danger">{{ getSymbol(slip.currency) }}{{ slip.incomeTax | number }}</td>
                   </tr>
                   <tr class="total-row">
                     <td><strong>Total Deductions</strong></td>
-                    <td class="text-right"><strong>\${{ slip.totalDeductions | number }}</strong></td>
+                    <td class="text-right"><strong>{{ getSymbol(slip.currency) }}{{ slip.totalDeductions | number }}</strong></td>
                   </tr>
                 </tbody>
               </table>
@@ -126,7 +126,7 @@ import { SalaryService } from '../../../core/services/salary.service';
               <div class="net-words">Effective Progressive Tax Rate: <strong>{{ slip.effectiveTaxRate }}%</strong></div>
             </div>
             <div class="net-amount">
-              \${{ slip.netSalary | number }}
+              {{ getSymbol(slip.currency) }}{{ slip.netSalary | number }}
             </div>
           </div>
 
@@ -144,10 +144,10 @@ import { SalaryService } from '../../../core/services/salary.service';
               </thead>
               <tbody>
                 <tr *ngFor="let b of slip.taxBreakdown">
-                  <td>\${{ b.bracketFrom | number }} - {{ b.bracketTo ? ('$' + (b.bracketTo | number)) : 'Above' }}</td>
+                  <td>{{ getSymbol(slip.currency) }}{{ b.bracketFrom | number }} - {{ b.bracketTo ? (getSymbol(slip.currency) + (b.bracketTo | number)) : 'Above' }}</td>
                   <td>{{ b.rate }}%</td>
-                  <td>\${{ b.taxableAmountInBracket | number }}</td>
-                  <td class="text-right font-semibold">\${{ b.taxForBracket | number }}</td>
+                  <td>{{ getSymbol(slip.currency) }}{{ b.taxableAmountInBracket | number }}</td>
+                  <td class="text-right font-semibold">{{ getSymbol(slip.currency) }}{{ b.taxForBracket | number }}</td>
                 </tr>
               </tbody>
             </table>
@@ -316,6 +316,20 @@ export class SalarySlipModalComponent implements OnInit {
   onBackdropClick(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('modal-backdrop')) {
       this.closeModal();
+    }
+  }
+
+  getSymbol(curr?: string): string {
+    switch (curr) {
+      case 'INR': return '₹';
+      case 'GBP': return '£';
+      case 'EUR': return '€';
+      case 'JPY': return '¥';
+      case 'CAD': return 'C$';
+      case 'AUD': return 'A$';
+      case 'SGD': return 'S$';
+      case 'USD':
+      default: return '$';
     }
   }
 }

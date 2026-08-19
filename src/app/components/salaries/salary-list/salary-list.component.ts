@@ -78,12 +78,12 @@ import { SalaryRecord } from '../../../core/models/models';
                     <div class="text-xs text-muted">{{ sal.employeeCode }} • {{ sal.country }}</div>
                   </div>
                 </td>
-                <td>{{ sal.currency }} \${{ sal.baseSalary | number }}</td>
-                <td class="text-success">+\${{ sal.allowances | number }}</td>
-                <td class="font-semibold">\${{ sal.grossSalary | number }}</td>
-                <td class="text-danger">-\${{ sal.tax | number }}</td>
+                <td>{{ getSymbol(sal.currency) }}{{ sal.baseSalary | number }}</td>
+                <td class="text-success">+{{ getSymbol(sal.currency) }}{{ sal.allowances | number }}</td>
+                <td class="font-semibold">{{ getSymbol(sal.currency) }}{{ sal.grossSalary | number }}</td>
+                <td class="text-danger">-{{ getSymbol(sal.currency) }}{{ sal.tax | number }}</td>
                 <td>
-                  <span class="font-bold text-primary">\${{ sal.netSalary | number }}</span>
+                  <span class="font-bold text-primary">{{ getSymbol(sal.currency) }}{{ sal.netSalary | number }}</span>
                 </td>
                 <td>{{ sal.effectiveDate }}</td>
                 <td>
@@ -259,5 +259,19 @@ export class SalaryListComponent implements OnInit {
       URL.revokeObjectURL(url);
       this.notificationService.success('Export Ready', 'Salary records CSV has been downloaded.');
     });
+  }
+
+  getSymbol(curr?: string): string {
+    switch (curr) {
+      case 'INR': return '₹';
+      case 'GBP': return '£';
+      case 'EUR': return '€';
+      case 'JPY': return '¥';
+      case 'CAD': return 'C$';
+      case 'AUD': return 'A$';
+      case 'SGD': return 'S$';
+      case 'USD':
+      default: return '$';
+    }
   }
 }

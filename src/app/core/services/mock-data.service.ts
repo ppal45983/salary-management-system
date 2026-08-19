@@ -138,15 +138,55 @@ export class MockDataService {
   }
 
   private generateMockDataset() {
-    const firstNames = ['Alexander', 'Sophia', 'Liam', 'Olivia', 'Noah', 'Emma', 'Ethan', 'Ava', 'Mason', 'Isabella', 'William', 'Mia', 'James', 'Harper', 'Benjamin', 'Evelyn', 'Aarav', 'Priya', 'Rahul', 'Ananya', 'Rohan', 'Sneha', 'Wei', 'Yuki', 'Kenji', 'Sakura', 'Lukas', 'Hannah', 'Camille', 'Antoine'];
-    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Sharma', 'Patel', 'Verma', 'Reddy', 'Tanaka', 'Sato', 'Suzuki', 'Mueller', 'Schmidt', 'Dubois', 'Lambert', 'Wilson', 'Anderson', 'Taylor', 'Moore'];
+    const indianMaleFirst = ['Pramod', 'Prashant', 'Rajat', 'Rohit', 'Rahul', 'Sumeet', 'Aaditya', 'Vipul', 'Chirag', 'Ankit', 'Vimal', 'Amit', 'Vikram', 'Suresh', 'Deepak', 'Alok', 'Manish', 'Sachin', 'Gaurav', 'Sandeep'];
+    const indianFemaleFirst = ['Sheelu', 'Riya', 'Shilpi', 'Renu', 'Kalpana', 'Jaya', 'Nandini', 'Ankita', 'Ruchika', 'Priya', 'Ananya', 'Pooja', 'Neha', 'Divya', 'Sneha', 'Sunita', 'Kavita', 'Megha', 'Swati'];
+    const indianLastNames = ['Pal', 'Bisht', 'Yadav', 'Thakur', 'Mishra', 'Trivedi', 'Rathore', 'Batham', 'Deora', 'Aggarwal', 'Dubey', 'Chauhan', 'Sharma', 'Verma', 'Kumar', 'Singh', 'Gupta', 'Joshi', 'Saxena', 'Pandey'];
+
+    const westernMaleFirst = ['Alexander', 'Liam', 'Noah', 'Ethan', 'Mason', 'William', 'James', 'Benjamin', 'Lucas', 'Oliver', 'Henry', 'Jack'];
+    const westernFemaleFirst = ['Sophia', 'Olivia', 'Emma', 'Ava', 'Isabella', 'Mia', 'Harper', 'Evelyn', 'Charlotte', 'Amelia', 'Abigail', 'Emily'];
+    const westernLastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson', 'Anderson', 'Taylor', 'Moore', 'Jackson', 'White', 'Harris', 'Martin'];
+
+    const germanFirst = ['Lukas', 'Hannah', 'Maximilian', 'Sophie', 'Felix', 'Leon', 'Mia', 'Paul', 'Anna', 'Jonas'];
+    const germanLast = ['Mueller', 'Schmidt', 'Schneider', 'Fischer', 'Weber', 'Meyer', 'Wagner', 'Becker', 'Schulz', 'Hoffmann'];
+
+    const frenchFirst = ['Camille', 'Antoine', 'Louis', 'Chloé', 'Gabriel', 'Léa', 'Manon', 'Hugo', 'Thomas', 'Inès'];
+    const frenchLast = ['Dubois', 'Lambert', 'Moreau', 'Fournier', 'Girard', 'Bonnet', 'Dupont', 'Fontaine', 'Rousseau', 'Vincent'];
+
+    const japaneseFirst = ['Kenji', 'Yuki', 'Sakura', 'Ren', 'Haruto', 'Aoi', 'Daiki', 'Hina', 'Hiroshi', 'Mei'];
+    const japaneseLast = ['Tanaka', 'Sato', 'Suzuki', 'Takahashi', 'Watanabe', 'Ito', 'Yamamoto', 'Nakamura', 'Kobayashi', 'Kato'];
+
+    const singaporeFirst = ['Wei', 'Mei Ling', 'Jun Jie', 'Zi Xuan', 'Kishan', 'Nur', 'Rashid', 'Chloe', 'Zheng', 'Xiu Qi'];
+    const singaporeLast = ['Tan', 'Lim', 'Lee', 'Ng', 'Ong', 'Wong', 'Goh', 'Chua', 'Chan', 'Teo'];
 
     for (let i = 1; i <= 1000; i++) {
-      const fn = firstNames[i % firstNames.length];
-      const ln = lastNames[(i * 3) % lastNames.length];
       const countryObj = this.countries[i % this.countries.length];
       const dept = this.departments[i % this.departments.length];
       const desig = this.designations[i % this.designations.length];
+
+      let fn = '';
+      let ln = '';
+
+      if (countryObj.name === 'India') {
+        const isMale = i % 2 === 0;
+        fn = isMale ? indianMaleFirst[i % indianMaleFirst.length] : indianFemaleFirst[i % indianFemaleFirst.length];
+        ln = indianLastNames[(i * 3) % indianLastNames.length];
+      } else if (countryObj.name === 'Germany') {
+        fn = germanFirst[i % germanFirst.length];
+        ln = germanLast[(i * 2) % germanLast.length];
+      } else if (countryObj.name === 'France') {
+        fn = frenchFirst[i % frenchFirst.length];
+        ln = frenchLast[(i * 2) % frenchLast.length];
+      } else if (countryObj.name === 'Japan') {
+        fn = japaneseFirst[i % japaneseFirst.length];
+        ln = japaneseLast[(i * 2) % japaneseLast.length];
+      } else if (countryObj.name === 'Singapore') {
+        fn = singaporeFirst[i % singaporeFirst.length];
+        ln = singaporeLast[(i * 2) % singaporeLast.length];
+      } else {
+        const isMale = i % 2 === 0;
+        fn = isMale ? westernMaleFirst[i % westernMaleFirst.length] : westernFemaleFirst[i % westernFemaleFirst.length];
+        ln = westernLastNames[(i * 3) % westernLastNames.length];
+      }
 
       const emp: Employee = {
         id: i,

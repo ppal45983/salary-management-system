@@ -46,7 +46,7 @@ import { SalaryService } from '../../../core/services/salary.service';
             <div class="salary-header">
               <div>
                 <span class="salary-tag">ACTIVE COMPENSATION PACKAGE</span>
-                <div class="salary-amount">{{ activeSalary.currency }} \${{ activeSalary.grossSalary | number }} <span class="per-period">/ year</span></div>
+                <div class="salary-amount">{{ getSymbol(activeSalary.currency) }}{{ activeSalary.grossSalary | number }} <span class="per-period">/ year ({{ activeSalary.currency }})</span></div>
               </div>
               <span class="badge badge-success">{{ activeSalary.status }}</span>
             </div>
@@ -54,19 +54,19 @@ import { SalaryService } from '../../../core/services/salary.service';
             <div class="breakdown-grid">
               <div class="breakdown-box">
                 <span class="b-label">Base Salary</span>
-                <span class="b-val">\${{ activeSalary.baseSalary | number }}</span>
+                <span class="b-val">{{ getSymbol(activeSalary.currency) }}{{ activeSalary.baseSalary | number }}</span>
               </div>
               <div class="breakdown-box">
                 <span class="b-label">Allowances</span>
-                <span class="b-val text-success">+\${{ activeSalary.allowances | number }}</span>
+                <span class="b-val text-success">+{{ getSymbol(activeSalary.currency) }}{{ activeSalary.allowances | number }}</span>
               </div>
               <div class="breakdown-box">
                 <span class="b-label">Est. Income Tax</span>
-                <span class="b-val text-danger">-\${{ activeSalary.tax | number }}</span>
+                <span class="b-val text-danger">-{{ getSymbol(activeSalary.currency) }}{{ activeSalary.tax | number }}</span>
               </div>
               <div class="breakdown-box net-box">
                 <span class="b-label">Estimated Net Pay</span>
-                <span class="b-val font-bold text-primary">\${{ activeSalary.netSalary | number }}</span>
+                <span class="b-val font-bold text-primary">{{ getSymbol(activeSalary.currency) }}{{ activeSalary.netSalary | number }}</span>
               </div>
             </div>
           </div>
@@ -85,7 +85,7 @@ import { SalaryService } from '../../../core/services/salary.service';
                     <span class="timeline-date">{{ h.effectiveDate }}</span>
                   </div>
                   <div class="timeline-salary">
-                    Gross: \${{ h.grossSalary | number }} (Net: \${{ h.netSalary | number }})
+                    Gross: {{ getSymbol(h.currency) }}{{ h.grossSalary | number }} (Net: {{ getSymbol(h.currency) }}{{ h.netSalary | number }})
                   </div>
                   <div class="timeline-reason" *ngIf="h.changeReason">{{ h.changeReason }}</div>
                 </div>
@@ -195,6 +195,20 @@ export class EmployeeDetailModalComponent implements OnInit {
   onBackdropClick(e: MouseEvent) {
     if ((e.target as HTMLElement).classList.contains('modal-backdrop')) {
       this.closeModal();
+    }
+  }
+
+  getSymbol(curr?: string): string {
+    switch (curr) {
+      case 'INR': return '₹';
+      case 'GBP': return '£';
+      case 'EUR': return '€';
+      case 'JPY': return '¥';
+      case 'CAD': return 'C$';
+      case 'AUD': return 'A$';
+      case 'SGD': return 'S$';
+      case 'USD':
+      default: return '$';
     }
   }
 }
