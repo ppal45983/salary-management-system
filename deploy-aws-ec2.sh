@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# AWS EC2 UserData / Automated Deployment Script
-# Salary Management System (Angular 16 + Spring Boot 3 + MySQL 8.0)
+# AWS EC2 Automated Deployment Script
+# Salary Management System (Spring Boot 3 + MySQL 8.0)
 # ==============================================================================
 set -e
 
-echo "=== [1/6] Updating OS packages and installing prerequisites ==="
+echo "================================================================================"
+echo " Starting Deployment: Salary Management System Backend on AWS EC2"
+echo "================================================================================"
+
+echo ">>> [1/5] Installing Prerequisites and Docker Engine..."
 if [ -f /etc/debian_version ]; then
     # Ubuntu / Debian
     sudo apt-get update -y
     sudo apt-get install -y ca-certificates curl gnupg lsb-release git
     
-    # Install Docker
+    # Add Docker GPG key & repository
     sudo mkdir -p /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg --yes
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
@@ -23,43 +27,56 @@ else
     sudo dnf install -y docker git
     sudo systemctl enable docker
     sudo systemctl start docker
-    # Install docker compose plugin
     sudo mkdir -p /usr/local/lib/docker/cli-plugins
     sudo curl -SL "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-linux-$(uname -m)" -o /usr/local/lib/docker/cli-plugins/docker-compose
     sudo chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 fi
 
-echo "=== [2/6] Configuring Docker & User Permissions ==="
+echo ">>> [2/5] Enabling Docker Service..."
 sudo systemctl enable docker
 sudo systemctl start docker
 sudo usermod -aG docker $USER || true
 
-echo "=== [3/6] Setting up Swap Space for Stability (2GB) ==="
+echo ">>> [3/5] Allocating 2GB Swap Memory (for t2.micro/t3.micro stability)..."
 if [ ! -f /swapfile ]; then
     sudo fallocate -l 2G /swapfile || sudo dd if=/dev/zero of=/swapfile bs=1M count=2048
     sudo chmod 600 /swapfile
     sudo mkswap /swapfile
     sudo swapon /swapfile
     echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+    echo "Swap allocated successfully."
+else
+    echo "Swap already configured."
 fi
 
-echo "=== [4/6] Setting up Application Directory ==="
-APP_DIR="/opt/salary-management-system"
-if [ ! -d "$APP_DIR" ]; then
-    sudo mkdir -p "$APP_DIR"
-    sudo chown -R $USER:$USER "$APP_DIR"
-    # Clone repository (replace with your repository URL if running standalone)
-    if [ -n "$REPO_URL" ]; then
-        git clone "$REPO_URL" "$APP_DIR"
+echo ">>> [4/5] Building & Launching Docker Services (MySQL 8 + Spring Boot 3)..."
+# If running inside repo directory:
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+sudo docker compose down || true
+sudo docker compose up -d --build
+
+echo ">>> [5/5] Waiting for Application Health Check..."
+PUBLIC_IP=$(curl -s http://checkip.amazonaws.com || curl -s ifconfig.me || echo "YOUR_EC2_PUBLIC_IP")
+
+for i in {1..20}; do
+    if curl -s http://localhost:8080/api/v1/actuator/health | grep -q "UP"; then
+        echo ""
+        echo "================================================================================"
+        echo " SUCCESS! Salary Management System Backend is running on AWS EC2!"
+        echo "================================================================================"
+        echo " Health Check: http://${PUBLIC_IP}:8080/api/v1/actuator/health"
+        echo " API Base URL: http://${PUBLIC_IP}:8080/api/v1"
+        echo ""
+        echo " Next Step: Update 'vercel.json' in your repository with:"
+        echo " \"destination\": \"http://${PUBLIC_IP}:8080/api/v1/:path*\""
+        echo " Then push to GitHub to connect Vercel to your live backend!"
+        echo "================================================================================"
+        exit 0
     fi
-fi
+    echo "Waiting for Spring Boot to start (attempt $i/20)..."
+    sleep 6
+done
 
-if [ -d "$APP_DIR" ]; then
-    cd "$APP_DIR"
-    echo "=== [5/6] Building & Starting Docker Containers on AWS EC2 ==="
-    sudo docker compose down || true
-    sudo docker compose up -d --build
-fi
-
-echo "=== [6/6] Deployment Complete! ==="
-echo "Access the application at: http://$(curl -s ifconfig.me)"
+echo "Container is running. Check logs using: sudo docker compose logs -f backend"

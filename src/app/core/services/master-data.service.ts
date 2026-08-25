@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiResponse, CountryInfo, Department, Designation, TaxBracket } from '../models/models';
 import { MockDataService } from './mock-data.service';
@@ -20,14 +20,14 @@ export class MasterDataService {
   getDepartments(): Observable<Department[]> {
     return this.http.get<ApiResponse<Department[]>>(`${this.apiUrl}/departments`).pipe(
       map(res => res.data),
-      catchError(() => of(this.mockData.departments))
+      catchError((err) => environment.useMockFallback ? of(this.mockData.departments) : throwError(() => err))
     );
   }
 
   getDesignations(): Observable<Designation[]> {
     return this.http.get<ApiResponse<Designation[]>>(`${this.apiUrl}/designations`).pipe(
       map(res => res.data),
-      catchError(() => of(this.mockData.designations))
+      catchError((err) => environment.useMockFallback ? of(this.mockData.designations) : throwError(() => err))
     );
   }
 
@@ -38,7 +38,8 @@ export class MasterDataService {
 
     return this.http.get<ApiResponse<TaxBracket[]>>(`${this.apiUrl}/tax-brackets`, { params }).pipe(
       map(res => res.data),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) return throwError(() => err);
         let list = this.mockData.taxBrackets;
         if (country) {
           list = list.filter(b => b.country.toLowerCase() === country.toLowerCase());
@@ -51,7 +52,7 @@ export class MasterDataService {
   getCountries(): Observable<CountryInfo[]> {
     return this.http.get<ApiResponse<CountryInfo[]>>(`${this.apiUrl}/countries`).pipe(
       map(res => res.data),
-      catchError(() => of(this.mockData.countries))
+      catchError((err) => environment.useMockFallback ? of(this.mockData.countries) : throwError(() => err))
     );
   }
 }

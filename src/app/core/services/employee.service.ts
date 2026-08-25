@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { ApiResponse, Employee, PageResponse } from '../models/models';
 import { MockDataService } from './mock-data.service';
@@ -29,7 +29,10 @@ export class EmployeeService {
 
     return this.http.get<ApiResponse<PageResponse<Employee>>>(this.apiUrl, { params }).pipe(
       map(res => res.data),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         // Fallback to mock data
         let filtered = [...this.mockData.employees];
         if (search) {
@@ -99,6 +102,7 @@ export class EmployeeService {
           status: employee.status || 'ACTIVE'
         };
         this.mockData.employees.unshift(newEmp);
+        this.mockData.saveCustomEmployee(newEmp);
         return of(newEmp);
       })
     );

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import {
   ApiResponse, PageResponse, SalaryRecord,
@@ -31,7 +31,10 @@ export class SalaryService {
 
     return this.http.get<ApiResponse<PageResponse<SalaryRecord>>>(this.apiUrl, { params }).pipe(
       map(res => res.data),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         let list = [...this.mockData.salaries];
         if (employeeId) {
           list = list.filter(s => s.employeeId === Number(employeeId));
@@ -98,6 +101,7 @@ export class SalaryService {
           country: emp.country
         };
         this.mockData.salaries.unshift(newRec);
+        this.mockData.saveCustomSalary(newRec);
         return of(newRec);
       })
     );

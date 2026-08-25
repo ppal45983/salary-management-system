@@ -2,6 +2,7 @@ package com.sms.config;
 
 import com.sms.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -22,6 +23,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +39,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsService userDetailsService;
 
+    @Value("${app.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200}")
+    private String allowedOriginsConfig;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -50,6 +55,7 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/actuator/health",
+                    "/actuator/info",
                     "/error"
                 ).permitAll()
                 .anyRequest().authenticated()
@@ -81,10 +87,27 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200"));
+        
+        List<String> originPatterns = new ArrayList<>(Arrays.asList(
+            "http://localhost:[*]",
+            "http://127.0.0.1:[*]",
+            "https://*.vercel.app",
+            "https://salary-management-system-*.vercel.app"
+        ));
+
+        if (allowedOriginsConfig != null && !allowedOriginsConfig.isBlank()) {
+            for (String origin : allowedOriginsConfig.split(",")) {
+                String trimmed = origin.trim();
+                if (!trimmed.isEmpty() && !originPatterns.contains(trimmed)) {
+                    originPatterns.add(trimmed);
+                }
+            }
+        }
+
+        configuration.setAllowedOriginPatterns(originPatterns);
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Disposition"));
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Disposition"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

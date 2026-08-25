@@ -135,6 +135,40 @@ export class MockDataService {
 
   constructor() {
     this.generateMockDataset();
+    this.loadCustomPersistedData();
+  }
+
+  private loadCustomPersistedData() {
+    try {
+      const savedEmps = localStorage.getItem('sms_created_employees');
+      if (savedEmps) {
+        const parsed: Employee[] = JSON.parse(savedEmps);
+        this.employees.unshift(...parsed);
+      }
+      const savedSals = localStorage.getItem('sms_created_salaries');
+      if (savedSals) {
+        const parsed: SalaryRecord[] = JSON.parse(savedSals);
+        this.salaries.unshift(...parsed);
+      }
+    } catch (e) {}
+  }
+
+  public saveCustomEmployee(emp: Employee) {
+    try {
+      const saved = localStorage.getItem('sms_created_employees');
+      let list: Employee[] = saved ? JSON.parse(saved) : [];
+      list.unshift(emp);
+      localStorage.setItem('sms_created_employees', JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  public saveCustomSalary(sal: SalaryRecord) {
+    try {
+      const saved = localStorage.getItem('sms_created_salaries');
+      let list: SalaryRecord[] = saved ? JSON.parse(saved) : [];
+      list.unshift(sal);
+      localStorage.setItem('sms_created_salaries', JSON.stringify(list));
+    } catch (e) {}
   }
 
   private generateMockDataset() {
