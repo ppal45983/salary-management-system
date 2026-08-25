@@ -46,4 +46,12 @@ public class Designation extends BaseEntity {
 
     @Column(name = "reports_to_designation_id")
     private Long reportsToDesignationId;
+
+    public String getTitle() {
+        return name;
+    }
+
+    public void setTitle(String title) {
+        this.name = title;
+    }
 }

@@ -2,7 +2,6 @@ package com.sms.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,13 +9,14 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * JWT Token Provider for generating, validating, and parsing JWT tokens.
- * Uses HS256 algorithm for token signing.
+ * Uses HS256 algorithm with JJWT 0.12.x.
  */
 @Slf4j
 @Component
@@ -30,6 +30,10 @@ public class JwtTokenProvider {
 
     @Value("${app.jwt.refresh-expiration}")
     private long refreshTokenExpirationMs;
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
 
     /**
      * Generate JWT token from UserDetails.
@@ -63,14 +67,12 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationTime);
 
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-
         return Jwts.builder()
-                .setClaims(claims)
-                .setSubject(subject)
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .claims(claims)
+                .subject(subject)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(getSigningKey())
                 .compact();
     }
 
@@ -85,12 +87,11 @@ public class JwtTokenProvider {
      * Get all claims from JWT token.
      */
     public Claims getClaimsFromToken(String token) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     /**
@@ -98,16 +99,13 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes());
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
+            Jwts.parser()
+                    .verifyWith(getSigningKey())
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
-        } catch (io.jsonwebtoken.security.SignatureException ex) {
-            log.error("Invalid JWT signature: {}", ex.getMessage());
-        } catch (io.jsonwebtoken.MalformedJwtException ex) {
-            log.error("Invalid JWT token: {}", ex.getMessage());
+        } catch (io.jsonwebtoken.security.SecurityException | io.jsonwebtoken.MalformedJwtException ex) {
+            log.error("Invalid JWT signature/token: {}", ex.getMessage());
         } catch (io.jsonwebtoken.ExpiredJwtException ex) {
             log.error("Expired JWT token: {}", ex.getMessage());
         } catch (io.jsonwebtoken.UnsupportedJwtException ex) {
