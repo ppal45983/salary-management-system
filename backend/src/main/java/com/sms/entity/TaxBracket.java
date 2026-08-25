@@ -14,9 +14,7 @@ import lombok.NoArgsConstructor;
  * Used for calculating income tax on employee salaries.
  */
 @Entity
-@Table(name = "tax_brackets", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_tax_bracket", columnNames = {"country", "tax_year", "income_from", "income_to"})
-})
+@Table(name = "tax_brackets")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,13 +30,13 @@ public class TaxBracket extends BaseEntity {
     @Column(name = "income_from", nullable = false, precision = 15, scale = 2)
     private java.math.BigDecimal incomeFrom;
 
-    @Column(name = "income_to", nullable = false, precision = 15, scale = 2)
+    @Column(name = "income_to", precision = 15, scale = 2)
     private java.math.BigDecimal incomeTo;
 
     @Column(name = "tax_rate", nullable = false, precision = 5, scale = 2)
     private java.math.BigDecimal taxRate; // Percentage (0-100)
 
-    @Column(name = "effective_from", nullable = false)
+    @Column(name = "effective_from")
     private java.time.LocalDate effectiveFrom;
 
     @Column(name = "effective_to")
