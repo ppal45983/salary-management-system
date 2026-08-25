@@ -16,8 +16,7 @@ import lombok.NoArgsConstructor;
  */
 @Entity
 @Table(name = "salary_records", uniqueConstraints = {
-    @UniqueConstraint(name = "uk_salary_employee_active", columnNames = {"employee_id", "status"}, 
-                      nativeQuery = true) // Only one ACTIVE record per employee
+    @UniqueConstraint(name = "uk_salary_employee_active", columnNames = {"employee_id", "status"}) // Only one ACTIVE record per employee
 })
 @Data
 @NoArgsConstructor
