@@ -54,13 +54,13 @@ echo ">>> [4/5] Building & Launching Docker Services (MySQL 8 + Spring Boot 3)..
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-sudo docker compose down || true
+sudo docker compose down -v || true
 sudo docker compose up -d --build
 
 echo ">>> [5/5] Waiting for Application Health Check..."
 PUBLIC_IP=$(curl -s http://checkip.amazonaws.com || curl -s ifconfig.me || echo "YOUR_EC2_PUBLIC_IP")
 
-for i in {1..20}; do
+for i in {1..30}; do
     if curl -s http://localhost:8080/api/v1/actuator/health | grep -q "UP"; then
         echo ""
         echo "================================================================================"
@@ -75,7 +75,7 @@ for i in {1..20}; do
         echo "================================================================================"
         exit 0
     fi
-    echo "Waiting for Spring Boot to start (attempt $i/20)..."
+    echo "Waiting for Spring Boot to start and seed database (attempt $i/30)..."
     sleep 6
 done
 
