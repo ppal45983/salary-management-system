@@ -1,6 +1,8 @@
 spring:
   application:
     name: salary-management-system
+  main:
+    allow-bean-definition-overriding: true
     
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/salary_management_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
