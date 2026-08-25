@@ -1,151 +1,182 @@
 -- Salary Management System - Initial Schema
--- Version: 1.0
--- This script creates all necessary tables for the salary management system
+-- Matches Hibernate JPA Entities exactly
 
--- ============================================
--- 1. CREATE DEPARTMENTS TABLE
--- ============================================
 CREATE TABLE IF NOT EXISTS departments (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_name (name)
+    code VARCHAR(20),
+    budget DECIMAL(15, 2),
+    location VARCHAR(100),
+    manager_employee_id BIGINT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_dept_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- 2. CREATE DESIGNATIONS TABLE
--- ============================================
 CREATE TABLE IF NOT EXISTS designations (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    title VARCHAR(100) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_title (title)
+    level VARCHAR(50) NOT NULL DEFAULT 'Mid',
+    grade VARCHAR(10),
+    min_salary DECIMAL(12, 2),
+    max_salary DECIMAL(12, 2),
+    department_id BIGINT,
+    reports_to_designation_id BIGINT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_desig_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- 3. CREATE EMPLOYEES TABLE
--- ============================================
 CREATE TABLE IF NOT EXISTS employees (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(150) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
+    employee_id VARCHAR(20) NOT NULL UNIQUE,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    phone VARCHAR(20),
+    date_of_birth DATE,
+    gender VARCHAR(10),
     department_id BIGINT NOT NULL,
     designation_id BIGINT NOT NULL,
     hire_date DATE NOT NULL,
-    country VARCHAR(2) NOT NULL,
+    country VARCHAR(10) NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
-    status ENUM('ACTIVE', 'INACTIVE', 'ON_LEAVE') DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE RESTRICT,
-    FOREIGN KEY (designation_id) REFERENCES designations(id) ON DELETE RESTRICT,
-    INDEX idx_email (email),
-    INDEX idx_department_id (department_id),
-    INDEX idx_country (country),
-    INDEX idx_status (status)
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    tax_id VARCHAR(50),
+    bank_account VARCHAR(50),
+    bank_code VARCHAR(50),
+    address VARCHAR(255),
+    city VARCHAR(100),
+    state VARCHAR(100),
+    postal_code VARCHAR(20),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_emp_email (email),
+    INDEX idx_emp_id (employee_id),
+    INDEX idx_emp_dept (department_id),
+    INDEX idx_emp_country (country)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- 4. CREATE SALARY_RECORDS TABLE
--- ============================================
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(50) NOT NULL DEFAULT 'HR_MANAGER',
+    employee_id BIGINT,
+    last_login TIMESTAMP NULL,
+    account_locked BOOLEAN NOT NULL DEFAULT FALSE,
+    failed_login_attempts INT NOT NULL DEFAULT 0,
+    password_expires_at TIMESTAMP NULL,
+    two_factor_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_user_username (username),
+    INDEX idx_user_email (email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS salary_records (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     employee_id BIGINT NOT NULL,
     base_salary DECIMAL(12, 2) NOT NULL,
     allowances DECIMAL(12, 2) DEFAULT 0,
     deductions DECIMAL(12, 2) DEFAULT 0,
-    gross_salary DECIMAL(12, 2) GENERATED ALWAYS AS (base_salary + allowances) STORED,
+    gross_salary DECIMAL(12, 2) NOT NULL,
     tax DECIMAL(12, 2) DEFAULT 0,
-    net_salary DECIMAL(12, 2) GENERATED ALWAYS AS (base_salary + allowances - deductions - tax) STORED,
+    net_salary DECIMAL(12, 2) NOT NULL,
     currency VARCHAR(3) NOT NULL DEFAULT 'USD',
     effective_date DATE NOT NULL,
-    status ENUM('DRAFT', 'ACTIVE', 'ARCHIVED') DEFAULT 'ACTIVE',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE RESTRICT,
-    INDEX idx_employee_id (employee_id),
-    INDEX idx_effective_date (effective_date),
-    INDEX idx_status (status),
-    UNIQUE KEY unique_active_salary (employee_id, status)
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    notes TEXT,
+    payment_method VARCHAR(50),
+    approved_by VARCHAR(100),
+    approved_at TIMESTAMP NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_sal_emp (employee_id),
+    INDEX idx_sal_effective (effective_date),
+    INDEX idx_sal_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- 5. CREATE SALARY_HISTORY TABLE
--- ============================================
 CREATE TABLE IF NOT EXISTS salary_history (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    salary_record_id BIGINT NOT NULL,
+    salary_record_id BIGINT,
+    employee_id BIGINT NOT NULL,
+    previous_base_salary DECIMAL(12, 2),
+    new_base_salary DECIMAL(12, 2) NOT NULL,
+    previous_gross_salary DECIMAL(12, 2),
+    new_gross_salary DECIMAL(12, 2) NOT NULL,
+    previous_net_salary DECIMAL(12, 2),
+    new_net_salary DECIMAL(12, 2) NOT NULL,
+    change_reason VARCHAR(255),
     change_type VARCHAR(50) NOT NULL,
-    old_value DECIMAL(12, 2),
-    new_value DECIMAL(12, 2),
-    field_name VARCHAR(100),
+    effective_date DATE NOT NULL,
     changed_by VARCHAR(100) NOT NULL,
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (salary_record_id) REFERENCES salary_records(id) ON DELETE CASCADE,
-    INDEX idx_salary_record_id (salary_record_id),
-    INDEX idx_changed_at (changed_at)
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_hist_emp (employee_id),
+    INDEX idx_hist_sal (salary_record_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- 6. CREATE TAX_BRACKETS TABLE
--- ============================================
 CREATE TABLE IF NOT EXISTS tax_brackets (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    country VARCHAR(2) NOT NULL,
+    country VARCHAR(100) NOT NULL,
     tax_year INT NOT NULL,
-    income_from DECIMAL(12, 2) NOT NULL,
-    income_to DECIMAL(12, 2) NOT NULL,
-    tax_rate DECIMAL(5, 3) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_bracket (country, tax_year, income_from, income_to),
-    INDEX idx_country (country),
-    INDEX idx_tax_year (tax_year)
+    income_from DECIMAL(15, 2) NOT NULL,
+    income_to DECIMAL(15, 2),
+    tax_rate DECIMAL(5, 2) NOT NULL,
+    effective_from DATE,
+    effective_to DATE,
+    description TEXT,
+    currency VARCHAR(10),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_tax_country_year (country, tax_year)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ============================================
--- 7. CREATE AUDIT_LOGS TABLE
--- ============================================
 CREATE TABLE IF NOT EXISTS audit_logs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    entity_type VARCHAR(50) NOT NULL,
-    entity_id BIGINT NOT NULL,
+    entity_name VARCHAR(100) NOT NULL,
+    entity_id BIGINT,
     action VARCHAR(50) NOT NULL,
-    user_id VARCHAR(100),
-    details JSON,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_entity_type (entity_type),
-    INDEX idx_entity_id (entity_id),
-    INDEX idx_timestamp (timestamp)
+    username VARCHAR(100) NOT NULL,
+    ip_address VARCHAR(50),
+    user_agent VARCHAR(255),
+    old_value LONGTEXT,
+    new_value LONGTEXT,
+    details TEXT,
+    status VARCHAR(20) NOT NULL DEFAULT 'SUCCESS',
+    error_message TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    created_by VARCHAR(100),
+    updated_by VARCHAR(100),
+    INDEX idx_audit_entity (entity_name, entity_id),
+    INDEX idx_audit_user (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- 8. CREATE USERS TABLE (for authentication)
--- ============================================
-CREATE TABLE IF NOT EXISTS users (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'HR_MANAGER',
-    enabled BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_username (username),
-    INDEX idx_email (email)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ============================================
--- INDEXES FOR PERFORMANCE
--- ============================================
--- Already created with table definitions, but additional indexes can be added here
-ALTER TABLE salary_records ADD INDEX idx_employee_status (employee_id, status);
-ALTER TABLE employees ADD INDEX idx_department_country (department_id, country);
-
--- ============================================
--- DATABASE COMPLETED
--- ============================================
--- Run the next migration script to seed initial data
