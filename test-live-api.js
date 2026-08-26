@@ -2,7 +2,7 @@
  * Automated Live API & CRUD Verification Test Suite
  * Tests all endpoints on the live AWS EC2 backend.
  */
-const BASE_URL = process.env.API_URL || 'http://13.204.76.101:8080/api/v1';
+const BASE_URL = process.env.API_URL || 'http://localhost:8080/api/v1';
 
 let authToken = null;
 let createdEmployeeId = null;
