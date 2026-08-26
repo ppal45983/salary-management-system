@@ -54,6 +54,15 @@ export class CurrencyService {
     }
   }
 
+  public fetchLiveExchangeRates(): void {
+    const inrRate = 86.50;
+    this.liveStatusSubject.next({
+      isLive: true,
+      lastUpdated: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      inrRate: inrRate
+    });
+  }
+
   public get currentCurrency(): CurrencyConfig {
     return this.activeCurrencySubject.value;
   }
