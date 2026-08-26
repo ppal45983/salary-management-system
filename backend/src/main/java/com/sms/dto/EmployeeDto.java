@@ -1,4 +1,4 @@
-﻿package com.sms.dto;
+package com.sms.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
