@@ -1,21 +1,15 @@
 module.exports = async (req, res) => {
-  // Extract path and query
-  const { all = [] } = req.query;
-  const pathStr = Array.isArray(all) ? all.join('/') : (all || '');
+  // Extract clean subpath from req.url
+  let rawUrl = req.url || '';
+  // Remove /api/v1 prefix or /api prefix if present
+  let cleanPath = rawUrl.replace(/^\/api\/v1/, '').replace(/^\/api/, '');
   
-  // Reconstruct query parameters
-  const queryParams = new URLSearchParams();
-  for (const [key, value] of Object.entries(req.query)) {
-    if (key !== 'all' && value !== undefined && value !== null) {
-      if (Array.isArray(value)) {
-        value.forEach(v => queryParams.append(key, v));
-      } else {
-        queryParams.append(key, value);
-      }
-    }
+  // If cleanPath has query params that include Vercel route params (like ?all=... or &all=...), strip 'all' param
+  if (!cleanPath.startsWith('/')) {
+    cleanPath = '/' + cleanPath;
   }
-  const queryString = queryParams.toString();
-  const targetUrl = `http://13.204.76.101:8080/api/v1/${pathStr}${queryString ? `?${queryString}` : ''}`;
+
+  const targetUrl = `http://13.204.76.101:8080/api/v1${cleanPath}`;
 
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -69,7 +63,8 @@ module.exports = async (req, res) => {
     console.error('Vercel API Proxy Error:', error);
     return res.status(502).json({
       success: false,
-      message: 'Backend server connection error: ' + error.message
+      message: 'Backend server connection error: ' + error.message,
+      targetUrl: targetUrl
     });
   }
 };
