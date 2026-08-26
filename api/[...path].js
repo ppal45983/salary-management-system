@@ -1,5 +1,5 @@
-export default async function handler(req, res) {
-  const { path, ...query } = req.query;
+module.exports = async (req, res) => {
+  const { path = [], ...query } = req.query;
   const pathStr = Array.isArray(path) ? path.join('/') : (path || '');
   
   const searchParams = new URLSearchParams();
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   const queryString = searchParams.toString();
   const targetUrl = `http://13.204.76.101:8080/api/v1/${pathStr}${queryString ? `?${queryString}` : ''}`;
 
-  // Enable CORS
+  // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -25,8 +25,7 @@ export default async function handler(req, res) {
   );
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   try {
@@ -71,4 +70,4 @@ export default async function handler(req, res) {
       message: 'Backend server connection error: ' + error.message
     });
   }
-}
+};

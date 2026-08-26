@@ -75,7 +75,10 @@ export class EmployeeService {
   getEmployeeById(id: number): Observable<Employee> {
     return this.http.get<ApiResponse<Employee>>(`${this.apiUrl}/${id}`).pipe(
       map(res => res.data),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         const emp = this.mockData.employees.find(e => e.id === id) || this.mockData.employees[0];
         return of(emp);
       })
@@ -85,7 +88,10 @@ export class EmployeeService {
   createEmployee(employee: Partial<Employee>): Observable<Employee> {
     return this.http.post<ApiResponse<Employee>>(this.apiUrl, employee).pipe(
       map(res => res.data),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         const newEmp: Employee = {
           id: this.mockData.employees.length + 1,
           employeeId: employee.employeeId || `EMP-${String(this.mockData.employees.length + 1).padStart(5, '0')}`,
@@ -111,7 +117,10 @@ export class EmployeeService {
   updateEmployee(id: number, employee: Partial<Employee>): Observable<Employee> {
     return this.http.put<ApiResponse<Employee>>(`${this.apiUrl}/${id}`, employee).pipe(
       map(res => res.data),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         const idx = this.mockData.employees.findIndex(e => e.id === id);
         if (idx !== -1) {
           this.mockData.employees[idx] = { ...this.mockData.employees[idx], ...employee };
@@ -125,7 +134,10 @@ export class EmployeeService {
   deleteEmployee(id: number): Observable<void> {
     return this.http.delete<ApiResponse<void>>(`${this.apiUrl}/${id}`).pipe(
       map(() => {}),
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         const idx = this.mockData.employees.findIndex(e => e.id === id);
         if (idx !== -1) {
           this.mockData.employees[idx].status = 'INACTIVE';
@@ -137,7 +149,10 @@ export class EmployeeService {
 
   exportEmployeesCsv(): Observable<string> {
     return this.http.get(`${this.apiUrl}/export`, { responseType: 'text' }).pipe(
-      catchError(() => {
+      catchError((err) => {
+        if (!environment.useMockFallback) {
+          return throwError(() => err);
+        }
         const header = "Employee ID,First Name,Last Name,Email,Department,Country,Currency,Status\n";
         const rows = this.mockData.employees.slice(0, 100).map(e =>
           `"${e.employeeId}","${e.firstName}","${e.lastName}","${e.email}","${e.departmentName}","${e.country}","${e.currency}","${e.status}"`
